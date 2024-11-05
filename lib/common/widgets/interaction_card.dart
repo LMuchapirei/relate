@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-
-import '../../pages/relationship_screen.dart';
+import '../../pages/interaction_summary.dart';
+import '../values/enums.dart';
 import 'attachement_preview.dart';
+import 'modals.dart';
 
 class InteractionExpansionCard extends StatelessWidget {
   final IconData icon;
@@ -11,7 +12,7 @@ class InteractionExpansionCard extends StatelessWidget {
   final String time;
   final String date;
 
-  const InteractionExpansionCard({ required this.icon,required this.title,required this.app, required this.date,required this.time});
+  const InteractionExpansionCard({super.key,  required this.icon,required this.title,required this.app, required this.date,required this.time});
 
 
   @override
@@ -67,7 +68,7 @@ class InteractionExpansionCard extends StatelessWidget {
           ),
           children: [
             // Expanded Content with Grid of Images
-                  Center(
+        Center(
         child: Container(
         margin: EdgeInsets.all(16.0.h),
         padding: EdgeInsets.all(12.0.h),
@@ -182,6 +183,14 @@ class InteractionExpansionCard extends StatelessWidget {
               onSelected: (MenuOptions result) {
                 switch (result) {
                   case MenuOptions.edit:
+                    displayBottomModalSheetLarge(context, 
+                      DraggableScrollableSheet(
+                        maxChildSize: 0.9,
+                        initialChildSize: 0.9,
+                        builder: (context,controller) {
+                          return InteractionSummaryScreen(controller: controller,);
+                        }
+                      ),isScroll: true);
                     print('Settings selected');
                     break;
                   case MenuOptions.bookmark:
@@ -238,3 +247,68 @@ class InteractionExpansionCard extends StatelessWidget {
     );
   }
 }
+
+
+//// Extracted to a new screen that uses an Expansion List Tile
+  Widget _buildInteractionItem(
+      BuildContext context,
+      {required String title,
+      required String time,
+      required String date,
+      required String app,
+      required IconData icon,
+      required bool isExpanded
+      }) {
+      return GestureDetector(
+        onTap: () {
+          // Fix this and show
+          // displayBottomModalSheetLarge(context, 
+          // DraggableScrollableSheet(
+          //   maxChildSize: 0.9,
+          //   initialChildSize: 0.9,
+          //   builder: (context,controller) {
+          //     return InteractionSummaryScreen(controller: controller,);
+          //   }
+          // ),isScroll: true);
+        },
+        child:
+         Container(
+          height: 50.h,
+          width: MediaQuery.of(context).size.width,
+          margin: EdgeInsets.all(10.h),
+          decoration: BoxDecoration(
+            color: Color(0xFFFFFFFF),
+            borderRadius: BorderRadius.circular(20.h)
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 20.w,
+              ),
+              Icon(icon, color: Colors.black),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    Text(app),
+                  ],
+                ),
+              ),
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                   Text(time),
+                   const SizedBox(height: 4),
+                   Text(date, style: const TextStyle(color: Colors.grey)),
+                  ],
+                ),
+              )
+            ],
+          ),
+        ),
+      );
+  }
+
+
