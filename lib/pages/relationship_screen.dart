@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:relate/common/widgets/modals.dart';
 import 'package:relate/pages/schedule_interaction.dart';
-
 import '../common/utils.dart';
-import '../common/widgets/attachement_preview.dart';
 import '../common/widgets/date_pil.dart';
 import '../common/widgets/interaction_card.dart';
 import '../common/widgets/month_year_picker.dart';
 import '../common/widgets/mood_selection.dart';
-import 'interaction_summary.dart';
 
 
 
 
 
 class RelationshipDetailsScreen extends StatefulWidget {
+  const RelationshipDetailsScreen({super.key});
+
   @override
   State<RelationshipDetailsScreen> createState() => _RelationshipDetailsScreenState();
 }
@@ -28,78 +28,72 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF1F1F1),
-      appBar:AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Text(
-                  'Welcome Back',
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: 18,
-                  ),
-                ),
-                Center(
-                  child: Text(
-                    "Linear's Relationship",
-                    style: TextStyle(
-                      color: Colors.black,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+      backgroundColor: const Color(0xFFF1F1F1),
       body: DefaultTabController(
         length: 2,
-        child: SizedBox(
-          height: MediaQuery.of(context).size.height,
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildInteractionCard(),
-                 SizedBox(height: 10.h),
-                _buildInteractionSummaryHeader(context),
-                 SizedBox(height: 5.h),
-                 if(selectedMonth != null)
-                _buildMonthSelectionDate(),
-                 if(selectedMonth != null)
-                 SizedBox(height: 5.h),
-                _buildFilterHeader(['Incoming','Outgoing']),
-                const SizedBox(height: 16),
-                Flexible(
-                  flex: 4,
-                  child: SingleChildScrollView(
-                    child: SizedBox(
-                      height: 300.h,
-                      child: TabBarView(
-                        children: [
-                          _buildInteractionList(context),
-                          _buildInteractionList(context),
-                        ],
-                      ),
-                    ),
-                  ),
-                )
+        child: NestedScrollView(headerSliverBuilder: (context,innBoxIsScrolled){
+          return <Widget>[
+            SliverAppBar(
+              backgroundColor: const Color(0xFFF1F1F1),
+              actions: [
+                IconButton(onPressed: (){}, icon: const Icon(Icons.search)),
               ],
+              pinned: true,
+              floating: false,
+              expandedHeight: 200.h,
+              automaticallyImplyLeading: true,
+              flexibleSpace: FlexibleSpaceBar(
+                background: Flex(
+                  direction: Axis.vertical,
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                     Padding(
+                       padding:  EdgeInsets.symmetric(
+                        horizontal: 4.w ,
+                       ),
+                       child: _buildInteractionCard(),
+                     )
+                  ],
+                ),
+              ),
             ),
-          ),
-        ),
-      ),
-      floatingActionButton: Opacity(
-        opacity: 0,
+             SliverPersistentHeader(
+              pinned: true,
+              delegate: CustomSliverHeaderDelegate(
+              child:  Padding(
+                padding: const EdgeInsets.all(5.0),
+                child: _buildFilterHeader(['Incoming','Outgoing']),
+              ), 
+              minHeight: 60,
+              maxHeight: 70
+            ))
+          ];
+        },
+         body: Padding(
+           padding: const EdgeInsets.all(16.0),
+           child: Column(
+           crossAxisAlignment: CrossAxisAlignment.start,
+           children: [
+             _buildInteractionSummaryHeader(context),
+              if(selectedMonth != null)
+             _buildMonthSelectionDate(),
+             Expanded(
+               child: SizedBox(
+                 width: MediaQuery.of(context).size.width,
+                 child: TabBarView(
+                   children: [
+                     _buildInteractionList(context),
+                     _buildInteractionList(context),
+                   ],
+                 ),
+               ),
+             )
+           ],
+         ),
+      )),
+   ),
+  floatingActionButton: Opacity(
+        opacity: 1,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -131,8 +125,8 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                   // Add action for creating a new interaction
                   _showRandomInteractionPicker();
                 },
-                child: const Icon(Icons.add),
                 backgroundColor: Colors.white,
+                child: const Icon(Icons.memory),
               ),
           ],
         ),
@@ -233,7 +227,7 @@ Widget buildTab(String title) {
                   fontWeight: FontWeight.bold,
                   color: Colors.black87),
             ),
-            SizedBox(height: 16),
+            SizedBox(height: 5),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -388,16 +382,111 @@ Widget buildTab(String title) {
 
   Widget _buildInteractionList(BuildContext context) {
     return ListView(
-      children: List.generate(8, (index) {
-        return  InteractionExpansionCard(
-          title: index % 2 == 0 ? 'Outgoing Call' : 'Physical Meeting',
-          time: '15:30pm',
-          date: '12 Jan 2025',
-          app: index % 2 == 0 ? 'Phone App' : 'CDB',
-          icon: index % 2 == 0 ? Icons.call : Icons.group,
+      children: List.generate(50, (index) {
+        return  Slidable( 
+          startActionPane: ActionPane(
+              motion: const StretchMotion(),
+              extentRatio: 0.25,
+              children: [
+                 Expanded(
+                  flex: 1,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.green,
+                      shape: BoxShape.circle,
+                      // borderRadius: BorderRadius.circular(30.h)
+                    ),
+                    child: const Icon(Icons.edit,color: Colors.white,),
+                  ),
+                ),
+              ],
+            ),
+            endActionPane: ActionPane(
+              motion: const StretchMotion(),
+              extentRatio: 0.35,
+              openThreshold: 0.3,
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                      // borderRadius: BorderRadius.circular(30.h)
+                    ),
+                    child: const Icon(Icons.bookmark,color: Colors.white,),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                      // borderRadius: BorderRadius.circular(30.h)
+                    ),
+                    child: const Icon(Icons.delete,color: Colors.white,),
+                  ),
+                )
+              ],
+            ),
+          child: InteractionExpansionCard(
+            title: index % 2 == 0 ? 'Outgoing Call' : 'Physical Meeting',
+            time: '15:30pm',
+            date: '12 Jan 2025',
+            app: index % 2 == 0 ? 'Phone App' : 'CDB',
+            icon: index % 2 == 0 ? Icons.call : Icons.group,
+          ),
         );
       }),
     );
   }
-
 }
+
+class CustomSliverHeaderDelegate extends SliverPersistentHeaderDelegate {
+  final double minHeight;
+  final double maxHeight;
+  final Widget child;
+
+  CustomSliverHeaderDelegate({
+    required this.minHeight,
+    required this.maxHeight,
+    required this.child,
+  });
+
+  @override
+  double get minExtent => minHeight;
+
+  @override
+  double get maxExtent => maxHeight;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    // Calculate current height based on the shrink offset
+    final currentHeight = (maxExtent - shrinkOffset).clamp(minExtent, maxExtent);
+
+    return SizedBox(
+      height: currentHeight,
+      child: child,
+    );
+  }
+
+  @override
+  bool shouldRebuild(covariant SliverPersistentHeaderDelegate oldDelegate) {
+    return maxHeight != oldDelegate.maxExtent || minHeight != oldDelegate.minExtent;
+  }
+}
+
+

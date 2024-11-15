@@ -10,3 +10,13 @@ final List<String> imageUrls = [
     'https://via.placeholder.com/210',
     // Add more URLs if needed
 ];
+
+
+enum MediaType {
+  image,
+  voice,
+  video,
+  location
+}
+
+

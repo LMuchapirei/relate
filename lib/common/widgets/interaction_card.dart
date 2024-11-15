@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:relate/common/enties/media_type.dart';
 import '../../pages/interaction_summary.dart';
 import '../values/enums.dart';
 import 'attachement_preview.dart';
@@ -37,7 +38,7 @@ class InteractionExpansionCard extends StatelessWidget {
           backgroundColor: Colors.white,
           collapsedBackgroundColor: Colors.white,
           leading:Icon(icon, color: Colors.black) ,
-          title: Container(
+          title: SizedBox(
             height: 50.h,
             child: Row(
               children: [
@@ -102,8 +103,9 @@ class InteractionExpansionCard extends StatelessWidget {
                   crossAxisSpacing: 8,
                   childAspectRatio: 1,
                 ),
-                itemCount: imageUrls.length,
+                itemCount: mediaList.length,
                 itemBuilder: (context, index) {
+                  final item = mediaList[index];
                   return GestureDetector(
                     onTap: () {
                       // Open the full-screen carousel
@@ -118,16 +120,7 @@ class InteractionExpansionCard extends StatelessWidget {
                     },
                     child: Hero(
                       tag: 'image_tag_$index',
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: Colors.grey.shade300,
-                          borderRadius: BorderRadius.circular(8.0),
-                          image: DecorationImage(
-                            image: NetworkImage(imageUrls[index]),
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                      ),
+                      child: item.getPreview(context)
                     ),
                   );
                 },

@@ -6,17 +6,20 @@ import '../common/widgets/modals.dart';
 import '../common/widgets/relationship_form.dart';
 
 class RelationshipsScreen extends StatefulWidget {
+  const RelationshipsScreen({super.key});
+
   @override
+  // ignore: library_private_types_in_public_api
   _RelationshipsScreenState createState() => _RelationshipsScreenState();
 }
 
 class _RelationshipsScreenState extends State<RelationshipsScreen> {
-  List<bool> isExpandedList = List.generate(5, (index) => false); // Control for expand state
+  List<bool> isExpandedList = List.generate(5, (index) => false); 
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-       backgroundColor: Colors.grey[200], // Light background color
+       backgroundColor: Colors.grey[200], 
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -74,7 +77,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.black,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 12),
+                padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 12.h),
               ),
               child: const  Text('Add Relationship',style: TextStyle(
                 color: Colors.white
@@ -146,7 +149,7 @@ Widget _buildRelationshipItem(int index) {
           collapsedBackgroundColor: Colors.white, // Background color when collapsed
           leading: CircleAvatar(
                 radius: 24.h,
-                backgroundImage: AssetImage('assets/profile.jpg'), // Replace with actual image
+                backgroundImage: AssetImage('assets/profile.jpg'),
               ),
           title: Container(
             height: 50.h,

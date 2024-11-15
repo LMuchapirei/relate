@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MoodTrackerScreen extends StatefulWidget {
   @override
@@ -55,28 +56,23 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        decoration: BoxDecoration(
-         color: Colors.white
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Instruction Text
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20.0),
               child: Text(
                 "Select current mood and I'll randomly suggest someone to interact with based on the mood you pick",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white,
+                  color: Colors.black,
                   fontSize: 18,
                   fontWeight: FontWeight.w300,
                 ),
               ),
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 40.h),
             // Mood Indicator with Pulsating Effect
             AnimatedBuilder(
               animation: _animationController,
@@ -85,8 +81,8 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen>
                   scale: _selectedMoodIndex != -1 ? _pulseAnimation.value : 1.0,
                   child: AnimatedContainer(
                     duration: Duration(milliseconds: 300),
-                    width: 150,
-                    height: 150,
+                    width: 150.w,
+                    height: 150.h,
                     decoration: BoxDecoration(
                       color: moodColors[_selectedMoodIndex],
                       shape: BoxShape.circle,
@@ -110,7 +106,7 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen>
                 );
               },
             ),
-            SizedBox(height: 40),
+            SizedBox(height: 40.h),
             // Mood Selection
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -124,7 +120,7 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen>
                   child: Column(
                     children: [
                       AnimatedContainer(
-                        duration: Duration(milliseconds: 300),
+                        duration: const Duration(milliseconds: 300),
                         width: 60,
                         height: 60,
                         decoration: BoxDecoration(
@@ -149,12 +145,12 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen>
                               : Colors.grey,
                         ),
                       ),
-                      SizedBox(height: 8),
+                      SizedBox(height: 8.h),
                       Text(
                         moods[index],
                         style: TextStyle(
                           color: _selectedMoodIndex == index
-                              ? Colors.white
+                              ? Colors.black
                               : Colors.grey,
                         ),
                       ),
@@ -163,28 +159,29 @@ class _MoodTrackerScreenState extends State<MoodTrackerScreen>
                 );
               }),
             ),
-            SizedBox(height: 50),
+            SizedBox(height: 50.h),
             // Suggest Interaction Button
             ElevatedButton.icon(
               onPressed: () {
                 // Handle AI suggestion action
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.purpleAccent,
-                padding: EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                backgroundColor: Colors.black,
+                padding: EdgeInsets.symmetric(horizontal: 40.w, vertical: 15.h),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(30),
                 ),
               ),
-              icon: Icon(Icons.psychology, color: Colors.white),
-              label: Text(
+              icon: const Icon(Icons.psychology, color: Colors.white),
+              label: const Text(
                 'Suggest Interaction',
                 style: TextStyle(fontSize: 18, color: Colors.white),
               ),
             ),
+            SizedBox(
+              height: 20.h,
+            )
           ],
-        ),
-      ),
     );
   }
 }
