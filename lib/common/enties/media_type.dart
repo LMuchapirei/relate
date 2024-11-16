@@ -1,11 +1,8 @@
 import 'dart:typed_data';
-
 import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
-// import 'package:audio_waveforms/audio_waveforms.dart';
-import 'package:http/http.dart' as http;
 import '../values/enums.dart';
 import 'package:just_audio/just_audio.dart';
 
@@ -121,35 +118,8 @@ extension PreviewMedia on MediaItem {
     return child;
   }
 }
-// extension AudioPlayback on MediaItem {
-//   static final _audioPlayer = AudioPlayer();
-//   static final playerController = PlayerController();
-  
-//   Future<void> playPause() async {
-//     if (type != MediaType.voice) return;
-//     try {
-//       // Download and prepare audio bytes
-//       final response = await http.get(Uri.parse(content));
-//       final audioBytes = response.bodyBytes;
 
-//         await playerController.preparePlayer(
-//           path: content,
-//           noOfSamples: 100,
-//         );
 
-//       if (_audioPlayer.playing) {
-//         await _audioPlayer.pause();
-//         await playerController.pausePlayer();
-//       } else {
-//         await _audioPlayer.setAudioSource(BytesSource(audioBytes));
-//         await _audioPlayer.play();
-//         await playerController.startPlayer();
-//       }
-//     } catch (e) {
-//       debugPrint('Error playing audio: $e');
-//     }
-//   }
-// }
 
 extension CarouselMedia on MediaItem {
   Widget getCarouselView(BuildContext context,AudioPlayer audioPlayer,Stream<PositionData> positionDataStream) {
@@ -177,21 +147,6 @@ extension CarouselMedia on MediaItem {
                 height: 50.h,
                 colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
               ),
-              //// We may not need this one
-              // FutureBuilder<String>(
-              //   future: getVoiceNoteDuration(),
-              //   builder: (context, snapshot) {
-              //     if (snapshot.connectionState == ConnectionState.waiting) {
-              //       return const CircularProgressIndicator();
-              //     } else if (snapshot.hasError) {
-              //       return const Text('Error loading duration');
-              //     }
-              //     return Text(
-              //       '${snapshot.data}',
-              //       style: Theme.of(context).textTheme.titleLarge,
-              //     );
-              //   },
-              // ),
               StreamBuilder<PositionData>(
               stream: positionDataStream,
               builder: (context, snapshot) {
@@ -217,21 +172,6 @@ extension CarouselMedia on MediaItem {
                 height: 20.h,
               ),
               Controls(audioPlayer: audioPlayer)
-              // Add AudioWaveforms widget
-              // SizedBox(
-              //   height: 64,
-              //   child: AudioFileWaveforms(
-              //     size: Size(MediaQuery.of(context).size.width * 0.8, 64.0),
-              //     playerController: AudioPlayback.playerController,
-              //     enableSeekGesture: true,
-              //     waveformType: WaveformType.fitWidth,
-              //     playerWaveStyle: const PlayerWaveStyle(
-              //       fixedWaveColor: Colors.grey,
-              //       liveWaveColor: Colors.blue,
-              //       spacing: 6,
-              //     ),
-              //   ),
-              // ),
             ],
           ),
         );
