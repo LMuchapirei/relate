@@ -3,8 +3,11 @@ import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:video_player/video_player.dart';
 import '../values/enums.dart';
 import 'package:just_audio/just_audio.dart';
+
+import '../widgets/video_player.dart';
 
 
 
@@ -48,7 +51,8 @@ final mediaList = [
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/170'),
     MediaItem(type: MediaType.voice, content: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),
     MediaItem(type: MediaType.voice, content: 'https://file-examples.com/storage/fef4e75e176737761a179bf/2017/11/file_example_MP3_700KB.mp3'),
-    MediaItem(type: MediaType.video, content: 'https://www.w3schools.com/html/mov_bbb.mp4'),
+    MediaItem(type: MediaType.video, content: 'https://file-examples.com/storage/fef4e75e176737761a179bf/2017/04/file_example_MP4_1920_18MG.mp4'),
+    MediaItem(type: MediaType.video, content: 'https://sample-videos.com/video321/mp4/720/big_buck_bunny_720p_10mb.mp4'),
     MediaItem(type: MediaType.location, content: '37.7749,-122.4194'), // San Francisco
 ];
 
@@ -109,7 +113,17 @@ extension PreviewMedia on MediaItem {
               );
         break;
       case MediaType.video:
-        // TODO: Handle this case.
+        child = Container(
+          height: 100.h,
+          width: 100.w,
+           decoration: BoxDecoration(
+                  color: Colors.grey.shade300,
+                  borderRadius: BorderRadius.circular(8.0),
+           ),
+           child: Column(children: [
+              Text("A video will be shown here"),
+           ]),
+        );
         break;
       case MediaType.location:
         // TODO: Handle this case.
@@ -122,7 +136,7 @@ extension PreviewMedia on MediaItem {
 
 
 extension CarouselMedia on MediaItem {
-  Widget getCarouselView(BuildContext context,AudioPlayer audioPlayer,Stream<PositionData> positionDataStream) {
+  Widget getCarouselView(BuildContext context,AudioPlayer audioPlayer,Stream<PositionData> positionDataStream,String? url) {
     switch(type) {
       case MediaType.image:
         return Container(
@@ -177,7 +191,7 @@ extension CarouselMedia on MediaItem {
         );
 
       case MediaType.video:
-        return const Center(child: Text('Video Player Coming Soon'));
+        return  VideoPlayerView(url: url ?? "", dataSourceType: DataSourceType.network);
         
       case MediaType.location:
         return const Center(child: Text('Map View Coming Soon'));

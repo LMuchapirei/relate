@@ -4,6 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:rxdart/rxdart.dart';
 
 import '../enties/media_type.dart';
+import '../values/enums.dart';
 
 class CarouselScreen extends StatefulWidget {
   final List<String> imageUrls;
@@ -40,7 +41,6 @@ class _CarouselScreenState extends State<CarouselScreen> {
     _pageController = PageController(initialPage: widget.initialIndex);
     _audioPlayer = AudioPlayer()
                           ..setUrl(widget.mediaList[widget.initialIndex].content);
-                          // ..setAsset("assets/audio/sample.mp3");
   }
 
 
@@ -81,10 +81,13 @@ class _CarouselScreenState extends State<CarouselScreen> {
                   controller: _pageController,
                   itemCount: widget.mediaList.length,
                   onPageChanged: (value) {
-                    _audioPlayer.setUrl(widget.mediaList[value].content);
+                    if(widget.mediaList[value].type == MediaType.voice) {
+                      _audioPlayer.setUrl(widget.mediaList[value].content);
+                    }
                   },
                   itemBuilder: (context, index) {
-                  return widget.mediaList[index].getCarouselView(context,_audioPlayer,_positionDataStream);
+                  final url = widget.mediaList[index].type == MediaType.video ? widget.mediaList[index].content : null;
+                  return widget.mediaList[index].getCarouselView(context,_audioPlayer,_positionDataStream,url);
                   },
               ),
                 )
