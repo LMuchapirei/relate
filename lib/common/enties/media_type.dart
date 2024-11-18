@@ -11,6 +11,8 @@ import '../values/video_metadata.dart';
 import '../widgets/video_controls.dart';
 import '../widgets/video_player.dart';
 import '../widgets/video_preview.dart';
+import '../widgets/map_preview.dart';
+import '../widgets/map_full_view.dart';
 
 
 
@@ -49,6 +51,7 @@ class MediaItem {
 
 
 final mediaList = [
+    MediaItem(type: MediaType.location, content: '37.7749,-122.4194'), // San Francisco
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/150'),
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/160'),
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/170'),
@@ -123,7 +126,10 @@ extension PreviewMedia on MediaItem {
             );
         break;
       case MediaType.location:
-        // TODO: Handle this case.
+        final coordinates = content.split(',');
+        final latitude = double.parse(coordinates[0]);
+        final longitude = double.parse(coordinates[1]);
+        child =LocationPreview(latitude: latitude,longitude: longitude);
         break;
     }
     return child;
@@ -191,7 +197,13 @@ extension CarouselMedia on MediaItem {
         return  VideoPlayerView(url: url ?? "", dataSourceType: DataSourceType.network);
         
       case MediaType.location:
-        return const Center(child: Text('Map View Coming Soon'));
+        final coordinates = content.split(',');
+        final latitude = double.parse(coordinates[0]);
+        final longitude = double.parse(coordinates[1]);
+        return MapFullView(
+          latitude: latitude,
+          longitude: longitude,
+        );
     }
   }
 }

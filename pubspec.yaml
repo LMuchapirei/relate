@@ -50,6 +50,8 @@ dependencies:
   video_thumbnail: ^0.5.3
   cached_network_image: ^3.4.1
   path_provider: ^2.1.5
+  flutter_map: ^7.0.2
+  latlong2: ^0.9.1
 
 dev_dependencies:
   flutter_test:

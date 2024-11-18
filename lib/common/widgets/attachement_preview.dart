@@ -64,18 +64,6 @@ class _CarouselScreenState extends State<CarouselScreen> {
                 height: 0.75.sh,
                 width: 0.8.sw,
                 child: Container(
-                  //// Add this decoration to this container
-                  // color: Colors.green,
-                      // decoration: const BoxDecoration(
-                      //     gradient: LinearGradient(
-                      //   begin: Alignment.topCenter,
-                      //   end: Alignment.bottomCenter,
-                      //   colors: [
-                      //     Color(0xFF144771), // Dark Blue (top)
-                      //     Color(0xFF071A2C), // Lighter Blue (bottom)
-                      //   ],
-                  // ),
-                  // ),
                   child:  PageView.builder(
                   controller: _pageController,
                   itemCount: widget.mediaList.length,
@@ -85,7 +73,7 @@ class _CarouselScreenState extends State<CarouselScreen> {
                     }
                   },
                   itemBuilder: (context, index) {
-                  final url = widget.mediaList[index].type == MediaType.video ? widget.mediaList[index].content : null;
+                  final url = widget.mediaList[index].type == MediaType.video ? widget.mediaList[index].content : widget.mediaList[index].type == MediaType.location ? widget.mediaList[index].content : null;
                   return widget.mediaList[index].getCarouselView(context,_audioPlayer,_positionDataStream,url);
                   },
               ),
