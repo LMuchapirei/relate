@@ -32,6 +32,21 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
     'High',
   ];
 
+  String selectedRepeat = 'Never';
+  final List<String> repeatOptions = [
+    'Never',
+    'Hourly',
+    'Daily',
+    'Weekdays',
+    'Weekends',
+    'Weekly',
+    'Fortnightly',
+    'Monthly',
+    'Every 3 Months',
+    'Every 6 Months',
+    'Yearly'
+  ];
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -62,8 +77,12 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
               if (isTimeSelected) _buildInlineTimePicker(),
               const SizedBox(height: 16),
               _buildOptionsSection(),
+              const SizedBox(height: 16),
+              _buildRepeatDropdown(),
               const SizedBox(height: 32),
               _buildActionButtons(context),
+              const SizedBox(height: 32),
+
             ]
         ),
       ),
@@ -101,6 +120,45 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
               }).toList(),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+    Widget _buildRepeatDropdown(){
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        color: Colors.grey[300],
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.repeat, color: Colors.black),
+              SizedBox(width: 8),
+              Text('Repeat', style: TextStyle(fontSize: 16)),
+            ],
+          ),
+          const SizedBox(width: 16),
+           DropdownButton<String>(
+              value: selectedApp,
+              hint: const Text('Frequency'),
+              onChanged: (String? newValue) {
+                setState(() {
+                  selectedApp = newValue;
+                });
+              },
+              items: repeatOptions.map<DropdownMenuItem<String>>((String repeatPattern) {
+                return DropdownMenuItem<String>(
+                  value: selectedRepeat,
+                  child: Text(repeatPattern),
+                );
+              }).toList(),
+            ),
         ],
       ),
     );
