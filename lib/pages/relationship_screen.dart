@@ -62,7 +62,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
               delegate: CustomSliverHeaderDelegate(
               child:  Padding(
                 padding: const EdgeInsets.all(5.0),
-                child: _buildFilterHeader(['Incoming','Outgoing']),
+                child: _buildFilterHeader(['Scheduled','Done']),
               ), 
               minHeight: 60,
               maxHeight: 70
@@ -238,7 +238,7 @@ Widget buildTab(String title) {
                       children: [
                         const Icon(Icons.arrow_downward, color: Colors.black),
                         Text(
-                          'Incoming',
+                          'Scheduled',
                           style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                         ),
                       ],
@@ -259,7 +259,7 @@ Widget buildTab(String title) {
                       children: [
                         const Icon(Icons.arrow_upward, color: Colors.black),
                     Text(
-                      'Outgoing',
+                      'Done',
                       style: TextStyle(fontSize: 14.sp, color: Colors.grey),
                     ),
                       ],
@@ -351,8 +351,8 @@ Widget buildTab(String title) {
       ),
       child: Row(
         children: [
-          _buildFilterTab('Incoming', false),
-          _buildFilterTab('Outgoing', true),
+          _buildFilterTab('Scheduled', false),
+          _buildFilterTab('Done', true),
         ],
       ),
     );
