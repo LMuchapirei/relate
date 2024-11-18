@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:geocoding/geocoding.dart';
 
-class LocationPreview extends StatelessWidget {
+class LocationPreview extends StatefulWidget {
   final double latitude;
   final double longitude;
   final double? width;
@@ -17,10 +18,42 @@ class LocationPreview extends StatelessWidget {
   });
 
   @override
+  State<LocationPreview> createState() => _LocationPreviewState();
+}
+
+class _LocationPreviewState extends State<LocationPreview> {
+  String locationName = 'Loading location...';
+
+  @override
+  void initState() {
+    super.initState();
+    _getLocationName();
+  }
+
+  Future<void> _getLocationName() async {
+    try {
+      List<Placemark> placemarks = await placemarkFromCoordinates(
+        widget.latitude,
+        widget.longitude,
+      );
+      if (placemarks.isNotEmpty) {
+        Placemark place = placemarks[0];
+        setState(() {
+          locationName = '${place.locality ?? ''}, ${place.country ?? ''}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        locationName = 'Location';
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Container(
-      width: width ?? 150,
-      height: height ?? 150,
+      width: widget.width ?? 150,
+      height: widget.height ?? 150,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(8),
         border: Border.all(color: Colors.grey[300]!),
@@ -31,7 +64,7 @@ class LocationPreview extends StatelessWidget {
           children: [
             FlutterMap(
               options: MapOptions(
-                initialCenter: LatLng(latitude, longitude),
+                initialCenter: LatLng(widget.latitude, widget.longitude),
                 maxZoom: 13.0,
               ),
               children: [
@@ -42,7 +75,7 @@ class LocationPreview extends StatelessWidget {
                 MarkerLayer(
                   markers: [
                     Marker(
-                      point: LatLng(latitude, longitude),
+                      point: LatLng(widget.latitude, widget.longitude),
                       width: 30,
                       height: 30,
                       child : const Icon(
@@ -78,6 +111,7 @@ class LocationPreview extends StatelessWidget {
                 ),
               ),
             ),
+            Text(locationName),
           ],
         ),
       ),

@@ -53,6 +53,7 @@ class MediaItem {
 final mediaList = [
     MediaItem(type: MediaType.location, content: '37.7749,-122.4194'), // San Francisco
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/150'),
+    MediaItem(type: MediaType.location, content: '-17.824858, 31.053028'), // San Francisco
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/160'),
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/170'),
     MediaItem(type: MediaType.voice, content: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3'),

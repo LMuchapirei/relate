@@ -58,5 +58,7 @@
 	<string>We need access to the microphone for audio playback and recording.</string>
 	<key>NSAudioSessionUsageDescription</key>
 	<string>We need to play audio content.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+<string>This app needs access to location when open to show location names.</string>
 </dict>
 </plist>
