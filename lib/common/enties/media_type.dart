@@ -7,7 +7,10 @@ import 'package:video_player/video_player.dart';
 import '../values/enums.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../values/video_metadata.dart';
+import '../widgets/video_controls.dart';
 import '../widgets/video_player.dart';
+import '../widgets/video_preview.dart';
 
 
 
@@ -58,8 +61,8 @@ final mediaList = [
 
 
 extension PreviewMedia on MediaItem {
-  Widget getPreview(BuildContext context){
-    var child = Container();
+  Widget getPreview(BuildContext context,String? url){
+    Widget child = Container();
     switch(type){
       case MediaType.image:
        child = Container(
@@ -113,17 +116,11 @@ extension PreviewMedia on MediaItem {
               );
         break;
       case MediaType.video:
-        child = Container(
-          height: 100.h,
-          width: 100.w,
-           decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(8.0),
-           ),
-           child: Column(children: [
-              Text("A video will be shown here"),
-           ]),
-        );
+        child =  VideoPreview(
+              videoUrl: url ?? "",
+              width: 200,
+              height: 150,
+            );
         break;
       case MediaType.location:
         // TODO: Handle this case.
@@ -199,74 +196,15 @@ extension CarouselMedia on MediaItem {
   }
 }
 
-class Controls extends StatelessWidget {
-  final AudioPlayer audioPlayer;
-  
-  const Controls({
-    super.key,
-    required this.audioPlayer,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return StreamBuilder<PlayerState>(
-      stream: audioPlayer.playerStateStream,
-      builder: (context, snapshot) {
-        final playerState = snapshot.data;
-        final processingState = playerState?.processingState;
-        final playing = playerState?.playing;
-        if(!(playing ?? false)) {
-          return IconButton(
-            onPressed: audioPlayer.play,
-            color: Colors.black,
-            icon: const Icon(Icons.play_arrow_rounded),
-          );
-        } else if (processingState != ProcessingState.completed) {
-          return IconButton(
-            onPressed: audioPlayer.pause,
-            color: Colors.black,
-            icon: const Icon(Icons.pause_rounded,),
-          );
-        }
-        return const Icon(
-          Icons.play_arrow_rounded,
-          size: 80,
-          color: Colors.black,
-        );
-      },
-    );
-  }
-}
 
 
 
 
-class BytesSource extends StreamAudioSource {
-  final Uint8List bytes;
-  BytesSource(this.bytes);
-
-  @override
-  Future<StreamAudioResponse> request([int? start, int? end]) async {
-    start ??= 0;
-    end ??= bytes.length;
-    return StreamAudioResponse(
-      sourceLength: bytes.length,
-      contentLength: end - start,
-      offset: start,
-      stream: Stream.value(bytes.sublist(start, end)),
-      contentType: 'audio/mpeg',
-    );
-  }
-}
 
 
-class PositionData {
-  final Duration position;
-  final Duration bufferedPosition;
-  final Duration duration;
 
-  const PositionData({required this.position, required this.bufferedPosition, required this.duration});
-}
+
+
 
 
 

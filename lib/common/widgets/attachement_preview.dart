@@ -5,14 +5,13 @@ import 'package:rxdart/rxdart.dart';
 
 import '../enties/media_type.dart';
 import '../values/enums.dart';
+import '../values/video_metadata.dart';
 
 class CarouselScreen extends StatefulWidget {
-  final List<String> imageUrls;
   final List<MediaItem> mediaList;
   final int initialIndex;
       
   const CarouselScreen({super.key, 
-    required this.imageUrls,
     required this.initialIndex,
     required this.mediaList,
   });

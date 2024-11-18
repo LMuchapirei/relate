@@ -131,12 +131,11 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                                 isScrollControlled: true,
                                 builder: (context) => CarouselScreen(
                                   mediaList: mediaList,
-                                  imageUrls: imageUrls,
                                   initialIndex: index,
                                 ),
                               );
                             },
-                            child: item.getPreview(context)
+                            child: item.getPreview(context,mediaList[index].content)
                           );
                         },
                       ),
