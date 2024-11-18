@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:relate/pages/relationship_screen.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../common/widgets/modals.dart';
 import '../common/widgets/relationship_form.dart';
@@ -120,119 +121,144 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
 
 
 Widget _buildRelationshipItem(int index) {
-  String relationshipType = index % 2 == 0 ? 'Family' : 'Friendship'; // Example data
+  String relationshipType = index % 2 == 0 ? 'Family' : 'Friendship';
   String rating = index % 2 == 0 ? '10' : '5';
   String date = '12 Jan 2025';
-  return 
-   Padding(
-    padding: const EdgeInsets.symmetric(
-      vertical: 8.0, 
+  return Slidable(
+    key: ValueKey(index),
+    endActionPane: ActionPane(
+      motion: const ScrollMotion(),
+      children: [
+        SlidableAction(
+          onPressed: (context) {
+            // Handle edit action
+          },
+          backgroundColor: Colors.blue,
+          foregroundColor: Colors.white,
+          icon: Icons.edit,
+          label: 'Edit',
+        ),
+        SlidableAction(
+          onPressed: (context) {
+            // Handle delete action
+          },
+          backgroundColor: Colors.red,
+          foregroundColor: Colors.white,
+          icon: Icons.delete,
+          label: 'Delete',
+        ),
+      ],
     ),
-    child: Theme(
-      data:  ThemeData(
-        expansionTileTheme: ExpansionTileThemeData(
-           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.h),
-            ),
-            collapsedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.h),
-            ),
-        )
-      ).copyWith(dividerColor: Colors.transparent),
-      child: GestureDetector(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(builder: (context)=>RelationshipDetailsScreen()));
-        },
-        child: ExpansionTile(
-          tilePadding: EdgeInsets.symmetric(horizontal: 16.0.h),
-          backgroundColor: Colors.white, // Background color when expanded
-          collapsedBackgroundColor: Colors.white, // Background color when collapsed
-          leading: CircleAvatar(
-                radius: 24.h,
-                backgroundImage: AssetImage('assets/profile.jpg'),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: 8.0, 
+      ),
+      child: Theme(
+        data:  ThemeData(
+          expansionTileTheme: ExpansionTileThemeData(
+             shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.h),
               ),
-          title: Container(
-            height: 50.h,
-            child: Row(
-              children: [
-                SizedBox(width: 8.w),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Tadiwa Linear',
-                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                      ),
-                      Text(
-                        relationshipType,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: relationshipType == 'Family' ? Colors.red : Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
+              collapsedShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.h),
+              ),
+          )
+        ).copyWith(dividerColor: Colors.transparent),
+        child: GestureDetector(
+          onTap: () {
+            Navigator.of(context).push(MaterialPageRoute(builder: (context)=>RelationshipDetailsScreen()));
+          },
+          child: ExpansionTile(
+            tilePadding: EdgeInsets.symmetric(horizontal: 16.0.h),
+            backgroundColor: Colors.white, // Background color when expanded
+            collapsedBackgroundColor: Colors.white, // Background color when collapsed
+            leading: CircleAvatar(
+                  radius: 24.h,
+                  backgroundImage: AssetImage('assets/profile.jpg'),
                 ),
-                Column(
-                  children: [
-                    Text(
-                      rating,
-                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(date, style: TextStyle(fontSize: 12)),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          children: const <Widget>[
-            Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            title: Container(
+              height: 50.h,
+              child: Row(
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Interactions scheduled', style: TextStyle(fontSize: 16)),
-                      Text('10')
-                    ],
+                  SizedBox(width: 8.w),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Tadiwa Linear',
+                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          relationshipType,
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: relationshipType == 'Family' ? Colors.red : Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  Column(
                     children: [
-                      Text('Date Created', style: TextStyle(fontSize: 14)),
-                      Text('12 Jan 2024')
-                    ],
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Next Interaction', style: TextStyle(fontSize: 14)),
-                      Text('14 Oct 2025')                        
-                    ],
-                  ),
-                  SizedBox(height: 8),
-                  Row(
-                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text('Rating', style: TextStyle(fontSize: 16)),
-                      Row(
-                        children: [
-                          Icon(Icons.sentiment_satisfied, color: Colors.yellow),
-                          SizedBox(width: 5),
-                          Text('Good', style: TextStyle(fontSize: 14)),
-                        ],
+                      Text(
+                        rating,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.red),
                       ),
+                      const SizedBox(height: 8),
+                      Text(date, style: TextStyle(fontSize: 12)),
                     ],
                   ),
                 ],
               ),
             ),
-          ],
+            children: const <Widget>[
+              Padding(
+                padding: EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Interactions scheduled', style: TextStyle(fontSize: 16)),
+                        Text('10')
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Date Created', style: TextStyle(fontSize: 14)),
+                        Text('12 Jan 2024')
+                      ],
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Next Interaction', style: TextStyle(fontSize: 14)),
+                        Text('14 Oct 2025')                        
+                      ],
+                    ),
+                    SizedBox(height: 8),
+                    Row(
+                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Rating', style: TextStyle(fontSize: 16)),
+                        Row(
+                          children: [
+                            Icon(Icons.sentiment_satisfied, color: Colors.yellow),
+                            SizedBox(width: 5),
+                            Text('Good', style: TextStyle(fontSize: 14)),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     ),
