@@ -5,6 +5,7 @@ import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../common/widgets/modals.dart';
 import '../common/widgets/relationship_form.dart';
+import '../common/widgets/manage_relation.dart';
 
 class RelationshipsScreen extends StatefulWidget {
   const RelationshipsScreen({super.key});
@@ -125,30 +126,76 @@ Widget _buildRelationshipItem(int index) {
   String rating = index % 2 == 0 ? '10' : '5';
   String date = '12 Jan 2025';
   return Slidable(
-    key: ValueKey(index),
-    endActionPane: ActionPane(
-      motion: const ScrollMotion(),
-      children: [
-        SlidableAction(
-          onPressed: (context) {
-            // Handle edit action
-          },
-          backgroundColor: Colors.blue,
-          foregroundColor: Colors.white,
-          icon: Icons.edit,
-          label: 'Edit',
-        ),
-        SlidableAction(
-          onPressed: (context) {
-            // Handle delete action
-          },
-          backgroundColor: Colors.red,
-          foregroundColor: Colors.white,
-          icon: Icons.delete,
-          label: 'Delete',
-        ),
-      ],
-    ),
+              startActionPane: ActionPane(
+              motion: const StretchMotion(),
+              extentRatio: 0.25,
+              children: [
+                 Expanded(
+                  flex: 1,
+                  child: GestureDetector(
+                    onTap: () {
+                      displayBottomModalSheet(
+                        context, 
+                        isScroll: true,
+                        Container(
+                          width: MediaQuery.of(context).size.width,
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          child: const ManageRelation(),
+                        ),
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 10
+                      ),
+                      decoration: const BoxDecoration(
+                        color: Colors.green,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.settings, color: Colors.white,),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            endActionPane: ActionPane(
+              motion: const StretchMotion(),
+              extentRatio: 0.35,
+              openThreshold: 0.3,
+              children: [
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.amber,
+                      shape: BoxShape.circle,
+                      // borderRadius: BorderRadius.circular(30.h)
+                    ),
+                    child: const Icon(Icons.bookmark,color: Colors.white,),
+                  ),
+                ),
+                Expanded(
+                  flex: 1,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 10
+                    ),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                      // borderRadius: BorderRadius.circular(30.h)
+                    ),
+                    child: const Icon(Icons.delete,color: Colors.white,),
+                  ),
+                )
+              ],
+            ),
     child: Padding(
       padding: const EdgeInsets.symmetric(
         vertical: 8.0, 
