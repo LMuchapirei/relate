@@ -63,21 +63,19 @@ class _CarouselScreenState extends State<CarouselScreen> {
               child: SizedBox(
                 height: 0.75.sh,
                 width: 0.8.sw,
-                child: Container(
-                  child:  PageView.builder(
-                  controller: _pageController,
-                  itemCount: widget.mediaList.length,
-                  onPageChanged: (value) {
-                    if(widget.mediaList[value].type == MediaType.voice) {
-                      _audioPlayer.setUrl(widget.mediaList[value].content);
-                    }
-                  },
-                  itemBuilder: (context, index) {
-                  final url = widget.mediaList[index].type == MediaType.video ? widget.mediaList[index].content : widget.mediaList[index].type == MediaType.location ? widget.mediaList[index].content : null;
-                  return widget.mediaList[index].getCarouselView(context,_audioPlayer,_positionDataStream,url);
-                  },
-              ),
-                )
+                child: PageView.builder(
+                controller: _pageController,
+                itemCount: widget.mediaList.length,
+                onPageChanged: (value) {
+                  if(widget.mediaList[value].type == MediaType.voice) {
+                    _audioPlayer.setUrl(widget.mediaList[value].content);
+                  }
+                },
+                itemBuilder: (context, index) {
+                final url = widget.mediaList[index].type == MediaType.video ? widget.mediaList[index].content : widget.mediaList[index].type == MediaType.location ? widget.mediaList[index].content : null;
+                return widget.mediaList[index].getCarouselView(context,_audioPlayer,_positionDataStream,url);
+                },
+              )
               ),
             ),
           ),
