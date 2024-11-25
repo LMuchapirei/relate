@@ -8,6 +8,7 @@ import '../common/widgets/relationship_form.dart';
 import '../common/widgets/manage_relation.dart';
 
 class RelationshipsScreen extends StatefulWidget {
+  static const routeName = '/relationships';
   const RelationshipsScreen({super.key});
 
   @override
