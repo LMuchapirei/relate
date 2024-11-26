@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import '../../../common/widgets/signin_widgets.dart';
+import '../../register/screens/register.dart';
 import '../bloc/signin_bloc.dart';
 import '../bloc/signin_event.dart';
 import '../bloc/signin_state.dart';
@@ -69,7 +70,7 @@ class _SignInState extends State<SignIn> {
                               }),
                               buildLogInAndRegButton(
                                   "Sign Up", ButtonType.register,(){
-                              //  Navigator.of(context).pushNamed(Register.routeName);
+                               Navigator.of(context).pushNamed(Register.routeName);
                               })
                             ]))
                   ]),
