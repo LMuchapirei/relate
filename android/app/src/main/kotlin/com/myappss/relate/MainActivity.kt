@@ -1,4 +1,4 @@
-package com.example.relate
+package com.myappss.relate
 
 import io.flutter.embedding.android.FlutterActivity
 
