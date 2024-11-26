@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -9,8 +10,11 @@ import 'package:relate/pages/welcome/welcome.dart';
 
 import 'bloc_providers.dart';
 import 'features/auth/screens/sign_in_screen.dart';
+import 'features/register/screens/register.dart';
 
-void main() {
+void main() async { 
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
   runApp(const MyApp());
 }
 
@@ -37,7 +41,8 @@ class MyApp extends StatelessWidget {
               Welcome.routeName: (context) => const Welcome(),
               SignIn.routeName: (context) => const SignIn(),
               Dashboard.routeName: (context) => Dashboard(),
-              RelationshipsScreen.routeName: (context) => RelationshipsScreen(),
+              RelationshipsScreen.routeName: (context) => const RelationshipsScreen(),
+              Register.routeName: (context) => const Register(),
             },
             home: Welcome(),
           );
