@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:relate/common/routes/pages.dart';
 import 'package:relate/pages/dashboard.dart';
 import 'package:relate/pages/relationship_screen.dart';
 import 'package:relate/pages/relationships.dart';
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: AppBlocProviders.allBlocProviders,
+      providers: [...AppPages.allProviders(context)],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),
         minTextAdapt: true,
@@ -37,14 +38,7 @@ class MyApp extends StatelessWidget {
               useMaterial3: true,
               textTheme: GoogleFonts.jostTextTheme()),
             debugShowCheckedModeBanner: false,
-            routes: {
-              Welcome.routeName: (context) => const Welcome(),
-              SignIn.routeName: (context) => const SignIn(),
-              Dashboard.routeName: (context) => Dashboard(),
-              RelationshipsScreen.routeName: (context) => const RelationshipsScreen(),
-              Register.routeName: (context) => const Register(),
-            },
-            home: Welcome(),
+            onGenerateRoute: AppPages.generateRouteSettings,
           );
         },
       ),
