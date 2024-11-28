@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:dots_indicator/dots_indicator.dart';
-import 'package:relate/features/auth/screens/sign_in_screen.dart';
+import 'package:relate/common/routes/names.dart';
 
 
 import '../../common/values/colors.dart';
@@ -11,7 +11,6 @@ import 'bloc/welcome_event.dart';
 import 'bloc/welcome_state.dart';
 
 class Welcome extends StatefulWidget {
-  static const routeName = '/welcome';
   const Welcome({Key? key}) : super(key: key);
 
   @override
@@ -117,7 +116,7 @@ class _WelcomeState extends State<Welcome> {
               } else {
                 // jump to a new page
                 Navigator.of(context).pushNamedAndRemoveUntil(
-                    SignIn.routeName, (route) => false);
+                    AppRoutes.SIGN_IN, (route) => false);
               }
             },
             child: Container(
