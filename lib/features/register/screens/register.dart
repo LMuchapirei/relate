@@ -10,7 +10,6 @@ import '../register_state.dart';
 
 
 class Register extends StatefulWidget {
-  static const routeName = "register";
   const Register({super.key});
 
   @override

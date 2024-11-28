@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:relate/common/routes/names.dart';
 
 import '../../../common/widgets/signin_widgets.dart';
 import '../../register/screens/register.dart';
@@ -13,7 +14,6 @@ import '../signin_controller.dart';
 
 class SignIn extends StatefulWidget {
   const SignIn({Key? key}) : super(key: key);
-  static const String routeName = "signIn";
   @override
   State<SignIn> createState() => _SignInState();
 }
@@ -70,7 +70,7 @@ class _SignInState extends State<SignIn> {
                               }),
                               buildLogInAndRegButton(
                                   "Sign Up", ButtonType.register,(){
-                               Navigator.of(context).pushNamed(Register.routeName);
+                               Navigator.of(context).pushNamed(AppRoutes.REGISTER);
                               })
                             ]))
                   ]),
