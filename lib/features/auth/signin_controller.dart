@@ -2,6 +2,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:relate/common/routes/names.dart';
 
 import '../../common/widgets/flutter_toast.dart';
 import 'bloc/signin_bloc.dart';
@@ -37,6 +38,7 @@ class SignInController {
           }
           var user = credential.user;
           if (user != null) {
+            Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.APPLICATION, (route) => false);
           } else {
              toastInfo(msg: "Currently you are not a user of this app");
           }
