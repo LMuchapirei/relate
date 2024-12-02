@@ -11,7 +11,6 @@ import '../common/widgets/relationship_form.dart';
 
 
 class Dashboard extends StatelessWidget {
-  static const routeName = '/dashboard';
   @override
   Widget build(BuildContext context) {
     return Scaffold(

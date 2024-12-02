@@ -19,9 +19,7 @@ class ApplicationPage extends StatefulWidget {
 }
 
 class _ApplicationPageState extends State<ApplicationPage> {
-  int _index = 0;
   
-  get barItems => null;
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AppBloc, AppState>(
@@ -36,7 +34,7 @@ class _ApplicationPageState extends State<ApplicationPage> {
               return SafeArea(
                   child: Scaffold(
                 backgroundColor: Colors.white,
-                body: buildPage(state.index),
+                body: buildPage(state.index,context),
                 bottomNavigationBar: Container(
                   decoration: BoxDecoration(
                       borderRadius: BorderRadius.only(

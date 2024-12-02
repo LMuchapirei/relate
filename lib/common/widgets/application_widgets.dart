@@ -1,20 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:relate/pages/dashboard.dart';
 
-Widget buildPage(int index){
-  List<Widget> _widget = const [
-    Center(
-      child: Text('Home'),
-    ),
-    Center(
+Widget buildPage(int index,BuildContext context){
+  List<Widget> _widget =  [
+    Dashboard(),
+    const Center(
       child: Text('Search'),
     ),
-    Center(
+    const Center(
       child: Text('Schedule'),
     ),
-    Center(
+    const Center(
       child: Text('Chat'),
     ),
-    Center(
+    const Center(
       child: Text('Profile'),
     )
   ];
