@@ -1,5 +1,3 @@
-
-
 class RegisterStates {
   final String userName;
   final String email;
@@ -23,7 +21,6 @@ class RegisterStates {
 
   @override
   String toString() {
-    // TODO: implement toString
     return {
       "userName":userName,
       "email": email,
