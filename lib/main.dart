@@ -12,10 +12,10 @@ import 'package:relate/pages/welcome/welcome.dart';
 import 'bloc_providers.dart';
 import 'features/auth/screens/sign_in_screen.dart';
 import 'features/register/screens/register.dart';
+import 'global.dart';
 
 void main() async { 
-  WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  await Global.init();
   runApp(const MyApp());
 }
 
@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [...AppPages.allProviders(context)],
+      providers: [...AppPages.allProviders(context),...AppPages.otherProviders(context)],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),
         minTextAdapt: true,
