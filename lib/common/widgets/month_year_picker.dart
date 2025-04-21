@@ -111,8 +111,8 @@ class MonthYearPicker extends StatefulWidget {
 }
 
 class _MonthYearPickerState extends State<MonthYearPicker> {
-  int selectedMonth = 1;
-  int selectedYear = 2024;
+  int selectedMonth = DateTime.now().month;
+  int selectedYear = DateTime.now().year;
 
   final Map<int,String> months = {
     0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:
@@ -158,8 +158,7 @@ class _MonthYearPickerState extends State<MonthYearPicker> {
               ),
             ],
           ),
-          SizedBox(height: 16),
-          // Month selection buttons
+          const SizedBox(height: 16),
           GridView.builder(
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 3,
@@ -169,7 +168,7 @@ class _MonthYearPickerState extends State<MonthYearPicker> {
             ),
             itemCount: months.length,
             shrinkWrap: true, // Prevents overflow
-            physics: NeverScrollableScrollPhysics(), // Prevents scrolling
+            physics: const NeverScrollableScrollPhysics(), 
             itemBuilder: (context, index) {
               /// change a setting to only 
               final isGreater = isMonthGreaterThanCurrent(index + 1);
@@ -185,7 +184,6 @@ class _MonthYearPickerState extends State<MonthYearPicker> {
                       )
                 ),
                 onPressed: () {
-                    
                     if(!isGreater){  
                       return;
                     }
@@ -200,37 +198,20 @@ class _MonthYearPickerState extends State<MonthYearPicker> {
               );
             },
           ),
-          SizedBox(height: 20),
+         const  SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
               if (selectedMonth != null) {
-                // Handle the update action here
-                Navigator.pop(context,{"month":selectedMonth,"year":selectedYear}); // Close the modal
-                // showDialog(
-                //   context: context,
-                //   builder: (BuildContext context) {
-                //     return AlertDialog(
-                //       title: Text("Selected Date"),
-                //       content: Text("Month: $selectedMonth\nYear: $selectedYear"),
-                //       actions: [
-                //         TextButton(
-                //           onPressed: () => Navigator.pop(context),
-                //           child: Text("OK"),
-                //         ),
-                //       ],
-                //     );
-                //   },
-                // );
+                Navigator.pop(context,{"month":selectedMonth,"year":selectedYear});
               } else {
-
               }
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red, // Button color
-              padding: EdgeInsets.symmetric(vertical: 12), // Vertical padding for the button
-              minimumSize: Size(double.infinity, 0), // Full width button
+              backgroundColor: Colors.red,
+              padding: const  EdgeInsets.symmetric(vertical: 12), 
+              minimumSize: const Size(double.infinity, 0),
             ),
-            child: Text("Filter",style: TextStyle(color: Colors.white),),
+            child: const Text("Filter",style: TextStyle(color: Colors.white),),
           ),
         ],
       ),
