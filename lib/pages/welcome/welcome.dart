@@ -6,6 +6,8 @@ import 'package:relate/common/routes/names.dart';
 
 
 import '../../common/values/colors.dart';
+import '../../common/values/constants.dart';
+import '../../global.dart';
 import 'bloc/welcome_bloc.dart';
 import 'bloc/welcome_event.dart';
 import 'bloc/welcome_state.dart';
@@ -115,6 +117,7 @@ class _WelcomeState extends State<Welcome> {
                     curve: Curves.easeIn);
               } else {
                 // jump to a new page
+                Global.storageService.setBool(AppConstants.STORAGE_DEVICE_OPEN_FIRST_TIME, true);
                 Navigator.of(context).pushNamedAndRemoveUntil(
                     AppRoutes.SIGN_IN, (route) => false);
               }
