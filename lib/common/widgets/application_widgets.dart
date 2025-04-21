@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:relate/pages/dashboard.dart';
 
 Widget buildPage(int index,BuildContext context){
-  List<Widget> _widget =  [
+  List<Widget> widget =  [
     Dashboard(),
     const Center(
       child: Text('Search'),
@@ -17,7 +17,7 @@ Widget buildPage(int index,BuildContext context){
       child: Text('Profile'),
     )
   ];
-  return _widget[index];
+  return widget[index];
 }
 
 class BarItemData {

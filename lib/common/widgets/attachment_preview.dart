@@ -1,14 +1,11 @@
+// ignore_for_file: library_private_types_in_public_api
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:rxdart/rxdart.dart';
-
-import '../enties/media_type.dart';
-import '../values/enums.dart';
-import '../values/video_metadata.dart';
+import 'package:relate/features/interactions/bloc/interaction_file_controller.dart';
+import 'package:relate/features/interactions/bloc/media_hive_item.dart';
 
 class CarouselScreen extends StatefulWidget {
-  final List<MediaItem> mediaList;
+  final List<MediaHiveItem> mediaList;
   final int initialIndex;
       
   const CarouselScreen({super.key, 
@@ -22,24 +19,12 @@ class CarouselScreen extends StatefulWidget {
 
 class _CarouselScreenState extends State<CarouselScreen> {
   late PageController _pageController;
-  late AudioPlayer _audioPlayer;
-
-    Stream<PositionData> get _positionDataStream => Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
-    _audioPlayer.positionStream,
-    _audioPlayer.bufferedPositionStream,
-    _audioPlayer.durationStream,
-    (position, bufferedPosition, duration) => PositionData(
-      position: position, 
-      bufferedPosition: bufferedPosition, 
-      duration: duration ?? Duration.zero),
-  );
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     _pageController = PageController(initialPage: widget.initialIndex);
-    _audioPlayer = AudioPlayer()
-                          ..setUrl(widget.mediaList[widget.initialIndex].content);
   }
 
 
@@ -52,12 +37,11 @@ class _CarouselScreenState extends State<CarouselScreen> {
 
   @override
   Widget build(BuildContext context) {
-    /// wrap this in the relative builder w
     return Scaffold(
       backgroundColor: Colors.white24,
       body: Stack(
         children: [
-          // Carousel PageVie
+          // Carousel PageView
           Positioned.fill(
             child: Center(
               child: SizedBox(
@@ -67,13 +51,12 @@ class _CarouselScreenState extends State<CarouselScreen> {
                 controller: _pageController,
                 itemCount: widget.mediaList.length,
                 onPageChanged: (value) {
-                  if(widget.mediaList[value].type == MediaType.voice) {
-                    _audioPlayer.setUrl(widget.mediaList[value].content);
-                  }
+                  setState(() {
+                    _selectedIndex = value;
+                  });
                 },
                 itemBuilder: (context, index) {
-                final url = widget.mediaList[index].type == MediaType.video ? widget.mediaList[index].content : widget.mediaList[index].type == MediaType.location ? widget.mediaList[index].content : null;
-                return widget.mediaList[index].getCarouselView(context,_audioPlayer,_positionDataStream,url);
+                return widget.mediaList[index].getCarouselView(context,widget.mediaList[index]);
                 },
               )
               ),
@@ -100,7 +83,10 @@ class _CarouselScreenState extends State<CarouselScreen> {
                   ),
                   IconButton(
                   icon: Icon(Icons.delete_rounded, color: Colors.black,size: 20.h,),
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () async  {
+                    final result = await InteractionFileController().deleteMediaItem(widget.mediaList[_selectedIndex]);
+                    Navigator.of(context).pop({"deletionFlag":result});
+                  },
                 ),
                 ],
                       ),
