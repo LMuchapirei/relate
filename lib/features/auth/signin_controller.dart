@@ -4,7 +4,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:relate/common/routes/names.dart';
 
+import '../../common/values/constants.dart';
 import '../../common/widgets/flutter_toast.dart';
+import '../../global.dart';
 import 'bloc/signin_bloc.dart';
 
 class SignInController {
@@ -37,7 +39,12 @@ class SignInController {
              toastInfo(msg: "You need to verify your email address.");
           }
           var user = credential.user;
+         
           if (user != null) {
+            print("TOKEN====");
+            String? idToken = await user.getIdToken();
+            print("ID Token: $idToken");
+            Global.storageService.setString(AppConstants.STORAGE_USER_TOKEN_KEY, "123456789");
             Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.APPLICATION, (route) => false);
           } else {
              toastInfo(msg: "Currently you are not a user of this app");

@@ -23,7 +23,7 @@ class _ApplicationPageState extends State<ApplicationPage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<AppBloc, AppState>(
-      builder: (context, state) {
+    builder: (context, state) {
         return Container(
           color: Colors.white,
           child: BlocConsumer<AppBloc, AppState>(
@@ -40,11 +40,6 @@ class _ApplicationPageState extends State<ApplicationPage> {
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20.h),
                           topRight: Radius.circular(20.h)),
-                      // border: Border(
-                      //   top: BorderSide(
-                      //     color: Colors.grey.shade300
-                      //   )
-                      // ),
                       boxShadow: [
                         BoxShadow(
                             color: Colors.grey.shade200,
