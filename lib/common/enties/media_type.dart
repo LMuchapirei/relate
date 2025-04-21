@@ -9,7 +9,7 @@ import 'package:just_audio/just_audio.dart';
 import '../values/video_metadata.dart';
 import '../widgets/video_controls.dart';
 import '../widgets/video_player.dart';
-import '../widgets/video_preview.dart';
+// import '../widgets/video_preview.dart'; --> find a fix for this
 import '../widgets/map_preview.dart';
 import '../widgets/map_full_view.dart';
 
@@ -18,7 +18,7 @@ import '../widgets/map_full_view.dart';
 class MediaItem {
   final MediaType type;
   final String content;
-
+  // final LocationType? locationType;
   MediaItem({required this.type,required this.content});
 
   String formatDuration(Duration? duration) {
@@ -50,8 +50,8 @@ class MediaItem {
 
 
 final mediaList = [
-    MediaItem(type: MediaType.location, content: '37.7749,-122.4194'), // San Francisco
-    MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/150'),
+    MediaItem(type: MediaType.location,  content: '37.7749,-122.4194'), // San Francisco
+    MediaItem(type: MediaType.image,     content:  'https://via.placeholder.com/150'),
     MediaItem(type: MediaType.location, content: '-17.824858, 31.053028'), // San Francisco
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/160'),
     MediaItem(type: MediaType.image, content:  'https://via.placeholder.com/170'),
@@ -119,11 +119,19 @@ extension PreviewMedia on MediaItem {
               );
         break;
       case MediaType.video:
-        child =  VideoPreview(
-              videoUrl: url ?? "",
-              width: 200,
-              height: 150,
-            );
+        child =  Container(
+          width: 200,
+          height: 150,
+          decoration: BoxDecoration(
+            color: Colors.red,
+            borderRadius: BorderRadius.circular(10)
+          ),
+        );
+        // VideoPreview(
+        //       videoUrl: url ?? "",
+        //       width: 200,
+        //       height: 150,
+        // );
         break;
       case MediaType.location:
         final coordinates = content.split(',');
@@ -211,7 +219,10 @@ extension CarouselMedia on MediaItem {
 
 
 
-
+enum LocationType {
+   online,
+   local
+}
 
 
 
