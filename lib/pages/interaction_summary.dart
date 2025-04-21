@@ -1,15 +1,23 @@
-import 'dart:math';
+// ignore_for_file: library_private_types_in_public_api
+
+import 'package:path/path.dart' as p;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:relate/common/widgets/flutter_toast.dart';
+import 'package:relate/features/interactions/bloc/interaction_file_controller.dart';
+import 'package:relate/features/interactions/bloc/media_hive_item.dart';
 
 import '../common/widgets/file_picker.dart';
 
 //// Add on edit mode
 class InteractionSummaryScreen extends StatefulWidget {
   final ScrollController controller;
-  const InteractionSummaryScreen({ required this.controller});
+  final String interactionId;
+  const InteractionSummaryScreen({super.key,  required this.controller, required this.interactionId});
   @override
   _InteractionSummaryScreenState createState() =>
       _InteractionSummaryScreenState();
@@ -20,7 +28,7 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
   final TextEditingController summaryController = TextEditingController();
   final TextEditingController noteController = TextEditingController();
   final TextEditingController feelingController = TextEditingController();
-
+  final InteractionFileController fileController = InteractionFileController();
 
   void _showSnackbar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(message)));
@@ -32,13 +40,13 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
   }
     setState(() {
       notes.add(noteController.text);
-      noteController.clear(); // Clear the input field after adding
+      noteController.clear(); 
     });
   }
 
   void _deleteNote(int index) {
     setState(() {
-      notes.removeAt(index); // Remove the note from the list
+      notes.removeAt(index); 
     });
   }
 
@@ -75,7 +83,7 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
             const SizedBox(height: 16),
             SizedBox(
               height: 300.h,
-              child: UnifiedMoodSelector()),
+              child: const UnifiedMoodSelector()),
             const SizedBox(height: 16),
             _buildFeelingSection(),
             const SizedBox(height: 32),
@@ -164,10 +172,50 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
               ),
               GestureDetector(
                 onTap: () async {
-                  showFilePickerOptions(context);
+                 final result = await showFilePickerOptions(context);
+                 final file = result["fileObject"];
+                 if(file is XFile){
+                    final bytes = await file.readAsBytes();
+                    final extension = p.extension(file.path);
+                    final type = getMediaTypeFromExtension(extension);
+                    final saveResponse = await fileController.saveMediaItem(
+                          type: type ?? MediaHiveType.image ,
+                          bytes: bytes,
+                          extension: extension,
+                          interactionId: widget.interactionId
+                      );
+                    if(saveResponse){
+                      toastInfo(msg: "Saved attachment.");
+                    }
+                 }
+
                 },
                 child: SvgPicture.asset("assets/images/attach.svg",height: 20.h,)),
-              SvgPicture.asset("assets/images/waveform.svg",height: 25.h,),
+              GestureDetector(
+                onTap: () async  {
+                  final result = await showVoiceNotePickerOptions(context);
+                  final file = result["fileObject"];
+                 if(file is XFile){
+                    final bytes = await file.readAsBytes();
+                    final extension = p.extension(file.path);
+                    final type = getMediaTypeFromExtension(extension);
+                    final saveResponse = await fileController.saveMediaItem(
+                          type: type ?? MediaHiveType.image ,
+                          bytes: bytes,
+                          extension: extension,
+                          interactionId: widget.interactionId
+                      );
+                    if(saveResponse){
+                      toastInfo(msg: "Saved voice attachment.");
+                    }
+                 }
+                },
+                child: SvgPicture.asset("assets/images/waveform.svg",height: 25.h,)),
+              GestureDetector(
+                onTap: () async  {
+                  
+                },
+                child: SvgPicture.asset("assets/images/location.svg",height: 25.h,)),
             ],
           ),
           const SizedBox(height: 8),
@@ -307,6 +355,8 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
 
 
 class UnifiedMoodSelector extends StatefulWidget {
+  const UnifiedMoodSelector({super.key});
+
   @override
   _UnifiedMoodSelectorState createState() => _UnifiedMoodSelectorState();
 }
