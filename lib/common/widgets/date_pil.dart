@@ -1,8 +1,6 @@
 
 
 import 'package:flutter/material.dart';
-import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter/src/widgets/placeholder.dart';
 
 class DatePill extends StatelessWidget {
   final String date;
@@ -14,8 +12,8 @@ class DatePill extends StatelessWidget {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Text('$date'),
-        Text('$month')
+        Text(date),
+        Text(month)
       ],
     );
   }

@@ -42,7 +42,6 @@ class VideoPreview extends StatelessWidget {
             child: const Center(child: Icon(Icons.error)),
           );
         }
-
         return Stack(
           alignment: Alignment.center,
           children: [

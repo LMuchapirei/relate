@@ -16,6 +16,7 @@ enum MediaType {
   image,
   voice,
   video,
+  // pdf, later on after building the preview
   location
 }
 

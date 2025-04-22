@@ -5,9 +5,11 @@
 *.swp
 .DS_Store
 .atom/
+.build/
 .buildlog/
 .history
 .svn/
+.swiftpm/
 migrate_working_dir/
 
 # IntelliJ related
@@ -41,3 +43,24 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+ios/GoogleService-Info.plist
+ios/Runner.xcodeproj/project.pbxproj
+ios/Podfile.lock
+api/Relate/build.gradle
+api/Relate/.gitignore
+api/Relate/gradlew
+api/Relate/gradlew.bat
+api/Relate/settings.gradle
+api/Relate/gradle/wrapper/gradle-wrapper.jar
+api/Relate/gradle/wrapper/gradle-wrapper.properties
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/RelateApplication.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/config/FirebaseAuthFilter.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/config/WebConfig.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/controller/RelationshipController.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/model/Relationship.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/model/RelationshipType.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/service/RelationshipService.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/repository/RelationshipRepository.java
+api/Relate/src/main/java/com/leanApps/relateapi/Relate/relationships/service/RelationshipServiceImpl.java
+api/Relate/src/main/resources/application.properties
+api/Relate/src/test/java/com/leanApps/relateapi/Relate/RelateApplicationTests.java

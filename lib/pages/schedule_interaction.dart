@@ -1,10 +1,17 @@
+// ignore_for_file: library_private_types_in_public_api
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
+import 'package:relate/features/interactions/bloc/interaction_controller.dart';
+import 'package:relate/features/interactions/bloc/interaction_events.dart';
 
 class ScheduleInteractionScreen extends StatefulWidget {
   final ScrollController controller;
 
-  const ScheduleInteractionScreen({required this.controller});
+  const ScheduleInteractionScreen({super.key, required this.controller});
+  
   @override
   _ScheduleInteractionScreenState createState() =>
       _ScheduleInteractionScreenState();
@@ -20,6 +27,7 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
   String? selectedPriority = 'Low';
 
   final List<String> appOptions = [
+    /// Need an API to redirect and launch apps and do some quick actions maybe in the future
     'Call',
     'Messages',
     'WhatsApp',
@@ -79,6 +87,8 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
               _buildOptionsSection(),
               const SizedBox(height: 16),
               _buildRepeatDropdown(),
+              // const SizedBox(height: 16),
+              // _buildRedirectDropdown(),
               const SizedBox(height: 32),
               _buildActionButtons(context),
               const SizedBox(height: 32),
@@ -89,41 +99,41 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
     );
   }
 
-  Widget _buildRedirectDropdown(){
-    return Container(
-      margin: const EdgeInsets.only(top: 16),
-      padding: const EdgeInsets.all(16.0),
-      decoration: BoxDecoration(
-        color: Colors.grey[300],
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.apps, color: Colors.black),
-          const SizedBox(width: 8),
-          const Text('Select App', style: TextStyle(fontSize: 16)),
-          const SizedBox(width: 16),
-          Expanded(
-            child: DropdownButton<String>(
-              value: selectedApp,
-              hint: const Text('Choose an app'),
-              onChanged: (String? newValue) {
-                setState(() {
-                  selectedApp = newValue;
-                });
-              },
-              items: appOptions.map<DropdownMenuItem<String>>((String app) {
-                return DropdownMenuItem<String>(
-                  value: app,
-                  child: Text(app),
-                );
-              }).toList(),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Widget _buildRedirectDropdown(){
+  //   return Container(
+  //     margin: const EdgeInsets.only(top: 16),
+  //     padding: const EdgeInsets.all(16.0),
+  //     decoration: BoxDecoration(
+  //       color: Colors.grey[300],
+  //       borderRadius: BorderRadius.circular(16),
+  //     ),
+  //     child: Row(
+  //       children: [
+  //         const Icon(Icons.apps, color: Colors.black),
+  //         const SizedBox(width: 8),
+  //         const Text('Select App', style: TextStyle(fontSize: 16)),
+  //         const SizedBox(width: 16),
+  //         Expanded(
+  //           child: DropdownButton<String>(
+  //             value: selectedApp,
+  //             hint: const Text('Choose an app'),
+  //             onChanged: (String? newValue) {
+  //               if(newValue != null){
+  //                   context.read<InteractionBloc>().add(SelectedRedirectAppEvent(newValue));
+  //               }
+  //             },
+  //             items: appOptions.map<DropdownMenuItem<String>>((String app) {
+  //               return DropdownMenuItem<String>(
+  //                 value: app,
+  //                 child: Text(app),
+  //               );
+  //             }).toList(),
+  //           ),
+  //         ),
+  //       ],
+  //     ),
+  //   );
+  // }
 
     Widget _buildRepeatDropdown(){
     return Container(
@@ -145,12 +155,12 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
           ),
           const SizedBox(width: 16),
            DropdownButton<String>(
-              value: selectedApp,
+              // value: ,
               hint: const Text('Frequency'),
               onChanged: (String? newValue) {
-                setState(() {
-                  selectedApp = newValue;
-                });
+                if(newValue != null){
+                    context.read<InteractionBloc>().add(FrequencyEvent(newValue));
+                }
               },
               items: repeatOptions.map<DropdownMenuItem<String>>((String repeatPattern) {
                 return DropdownMenuItem<String>(
@@ -171,18 +181,24 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
         color: Colors.grey[300],
         borderRadius: BorderRadius.circular(16),
       ),
-      child: const Column(
+      child: Column(
         children: [
-          TextField(
-            decoration: InputDecoration(
+           TextField(
+            decoration: const InputDecoration(
               labelText: 'Title',
               border: InputBorder.none,
             ),
+            onChanged: (value) {
+               context.read<InteractionBloc>().add(TitleEvent(value));
+            },
           ),
-          SizedBox(height: 8),
+          const SizedBox(height: 8),
           TextField(
             maxLines: 3,
-            decoration: InputDecoration(
+            onChanged: (value) {
+                context.read<InteractionBloc>().add(NotesEvent(value));
+            },
+            decoration: const InputDecoration(
               labelText: 'Notes',
               border: InputBorder.none,
             ),
@@ -204,9 +220,9 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
         children: [
           Row(
             children: [
-              Icon(Icons.calendar_today, color: Colors.black),
+              const Icon(Icons.calendar_today, color: Colors.black),
               const SizedBox(width: 8),
-              Text('Date', style: const TextStyle(fontSize: 16)),
+              const Text('Date', style: const TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
               Switch(
                 value: isDateSelected,
@@ -220,9 +236,9 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
           ),
           Row(
             children: [
-              Icon(Icons.access_time, color: Colors.black),
+              const Icon(Icons.access_time, color: Colors.black),
               const SizedBox(width: 8),
-              Text('Time', style: const TextStyle(fontSize: 16)),
+              const Text('Time', style:  TextStyle(fontSize: 16)),
               const SizedBox(width: 8),
               Switch(
                 value: isTimeSelected,
@@ -260,9 +276,7 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
             firstDate: DateTime(2000),
             lastDate: DateTime(2100),
             onDateChanged: (date) {
-              setState(() {
-                selectedDate = date;
-              });
+             context.read<InteractionBloc>().add(SelectedDateEvent(date));
             },
           ),
         ],
@@ -295,9 +309,7 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
                 initialTime: selectedTime,
               );
               if (picked != null && picked != selectedTime) {
-                setState(() {
-                  selectedTime = picked;
-                });
+                context.read<InteractionBloc>().add(SelectedTimeEvent(picked));
               }
             },
             style: ElevatedButton.styleFrom(
@@ -343,9 +355,8 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
                 value: selectedApp,
                 hint: const Text('Choose an app'),
                 onChanged: (String? newValue) {
-                  setState(() {
-                    selectedApp = newValue;
-                  });
+                  context.read<InteractionBloc>().add(SelectedRedirectAppEvent(newValue ?? ""
+                  ));
                 },
                 items: appOptions.map<DropdownMenuItem<String>>((String app) {
                   return DropdownMenuItem<String>(
@@ -363,9 +374,7 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
               DropdownButton<String>(
                 value: selectedPriority,
                 onChanged: (String? newValue) {
-                  setState(() {
-                    selectedPriority = newValue;
-                  });
+                    context.read<InteractionBloc>().add(PriorityEvent(newValue ?? ""));
                 },
                 items: priorityOptions
                     .map<DropdownMenuItem<String>>((String priority) {
@@ -387,8 +396,10 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         ElevatedButton(
-          onPressed: () {
+          onPressed: () async {
             // Handle Add action
+            await InteractionController(context).scheduleInteraction();
+            Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(
             fixedSize: Size(100.w, 30.h),
@@ -420,4 +431,11 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
       ],
     );
   }
+}
+
+
+enum InteractionPriority {
+  low,
+  medium,
+  high
 }

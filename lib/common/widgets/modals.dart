@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 
-void displayBottomModalSheet(BuildContext context,Widget sheetBody,{isScroll = true}){
+ displayBottomModalSheet(BuildContext context,Widget sheetBody,{isScroll = true}){
       showModalBottomSheet(
         context: context, 
         showDragHandle: true,
@@ -11,12 +11,11 @@ void displayBottomModalSheet(BuildContext context,Widget sheetBody,{isScroll = t
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(
             top: Radius.circular(10.h),
-           
           )
         ),
         builder: (context){
           return sheetBody;
-        });
+     });
 }
 
 

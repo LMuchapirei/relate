@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:relate/common/enties/media_type.dart';
+import 'package:relate/features/interactions/bloc/interaction_file_controller.dart';
+import 'package:relate/features/interactions/bloc/media_hive_item.dart';
 import '../../pages/interaction_summary.dart';
 import '../values/enums.dart';
-import 'attachement_preview.dart';
+import 'attachment_preview.dart';
 import 'modals.dart';
 
 class InteractionExpansionCard extends StatefulWidget {
@@ -13,6 +15,7 @@ class InteractionExpansionCard extends StatefulWidget {
   final String app;
   final String time;
   final String date;
+  final String interactionId;
 
   const InteractionExpansionCard({
     super.key, 
@@ -20,7 +23,8 @@ class InteractionExpansionCard extends StatefulWidget {
     required this.title,
     required this.app, 
     required this.date,
-    required this.time
+    required this.time,
+    required this.interactionId
   });
 
   @override
@@ -33,8 +37,7 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
   void initState() {
     super.initState();
   }
-
-
+  List<MediaHiveItem> _mediaList = [];
 
 
   @override
@@ -57,6 +60,14 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
           backgroundColor: Colors.white,
           collapsedBackgroundColor: Colors.white,
           leading: Icon(widget.icon, color: Colors.black),
+          onExpansionChanged: (value) async {
+           if(value){
+            final mediaList = await InteractionFileController().getMediaItemsForInteraction(widget.interactionId);
+            setState(() {
+              _mediaList = mediaList;
+            });
+           }
+          },
           title: SizedBox(
             height: 50.h,
             child: Row(
@@ -85,7 +96,6 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
             ),
           ),
           children: [
-            // Expanded Content with Grid of Images
             Center(
               child: Container(
                 margin: EdgeInsets.all(16.0.h),
@@ -101,7 +111,7 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                     BoxShadow(
                       color: Colors.grey.shade300,
                       blurRadius: 8,
-                      offset: Offset(0, 4),
+                      offset: const Offset(0, 4),
                     ),
                   ],
                 ),
@@ -120,22 +130,27 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                           crossAxisSpacing: 8,
                           childAspectRatio: 1,
                         ),
-                        itemCount: mediaList.length,
+                        itemCount: _mediaList.length,
                         itemBuilder: (context, index) {
-                          final item = mediaList[index];
+                          final item = _mediaList[index];//
                           return GestureDetector(
-                            onTap: () {
-                              // Open the full-screen carousel
-                              showModalBottomSheet(
+                            onTap: () async {
+                              final result = await showModalBottomSheet(
                                 context: context,
                                 isScrollControlled: true,
                                 builder: (context) => CarouselScreen(
-                                  mediaList: mediaList,
+                                  mediaList: _mediaList,
                                   initialIndex: index,
                                 ),
                               );
+                              if(result is Map && result['deletionFlag']){
+                                final mediaList = await InteractionFileController().getMediaItemsForInteraction(widget.interactionId);
+                                setState(() {
+                                  _mediaList = mediaList;
+                                });
+                              }
                             },
-                            child: item.getPreview(context,mediaList[index].content)
+                            child: item.getPreview(context,mediaList[index].content,item)
                           );
                         },
                       ),
@@ -144,16 +159,16 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                       height: 10.h,
                     ),
                     // Meeting information section
-                    const Row(
+                    Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Row(
                           children: [
-                            Icon(Icons.meeting_room, color: Colors.black54),
-                            SizedBox(width: 8),
+                            const Icon(Icons.meeting_room, color: Colors.black54),
+                            const SizedBox(width: 8),
                             Text(
-                              'Physical Meeting',
-                              style: TextStyle(
+                              widget.app,//'Physical Meeting',
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                                 color: Colors.black87,
@@ -161,7 +176,7 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                             ),
                           ],
                         ),
-                        Text(
+                        const Text(
                           'CDB',
                           style: TextStyle(
                             fontSize: 14,
@@ -170,14 +185,14 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                         ),
                       ],
                     ),
-                    SizedBox(height: 4),
+                    const SizedBox(height: 4),
                     Divider(thickness: 1, color: Colors.grey.shade300),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
-                          'Tuesday, 12 Jun',
-                          style: TextStyle(
+                         Text(
+                           widget.date,
+                          style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black54,
                           ),
@@ -194,7 +209,7 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                                     maxChildSize: 0.9,
                                     initialChildSize: 0.9,
                                     builder: (context,controller) {
-                                      return InteractionSummaryScreen(controller: controller,);
+                                      return InteractionSummaryScreen(controller: controller,interactionId: widget.interactionId,);
                                     }
                                   ),isScroll: true);
                                 print('Settings selected');
