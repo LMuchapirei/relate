@@ -67,6 +67,7 @@ dependencies:
   uuid:
   appwrite: ^15.0.0
   equatable: ^2.0.7
+  flutter_pdfview: ^1.4.0+1
 
 dev_dependencies:
   hive_generator:

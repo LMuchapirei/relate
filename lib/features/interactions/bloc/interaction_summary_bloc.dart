@@ -22,7 +22,7 @@ class InteractionSummaryBloc extends Bloc<InteractionSummaryEvent, InteractionSu
     on<SaveSummaryEvent>((event, emit) async {
       emit(state.copyWith(isSaving: true, saveSuccess: false, error: null));
       try {
-        await controller.saveSummary(
+         controller.saveSummary(
           userId: event.userId,
           relationshipId: event.relationshipId,
           notes: event.notes,
@@ -30,8 +30,9 @@ class InteractionSummaryBloc extends Bloc<InteractionSummaryEvent, InteractionSu
           feeling: event.feeling,
           mood: event.mood,
           fileUrls: event.attachments,
-        );
-        emit(state.copyWith(isSaving: false, saveSuccess: true));
+        ).then((_){
+            emit(state.copyWith(isSaving: false, saveSuccess: true));
+        });
       } catch (e) {
         emit(state.copyWith(isSaving: false, saveSuccess: false, error: e.toString()));
       }

@@ -1,5 +1,6 @@
 // ignore_for_file: library_private_types_in_public_api
 import 'dart:io';
+import 'package:appwrite/appwrite.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:path/path.dart' as p;
@@ -15,6 +16,7 @@ import 'package:relate/features/interactions/bloc/interaction_summary_bloc.dart'
 import 'package:relate/features/interactions/bloc/interaction_summary_events.dart';
 import 'package:relate/features/interactions/bloc/interaction_summary_state.dart';
 import 'package:relate/features/interactions/bloc/interaction_summary_controller.dart';
+import 'package:relate/global.dart';
 
 import '../common/widgets/file_picker.dart';
 
@@ -74,12 +76,12 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
   Widget build(BuildContext context) {
     return BlocListener<InteractionSummaryBloc, InteractionSummaryState>(
       listener: (context, state) {
-        if (state.saveSuccess) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Summary saved successfully!")),
-          );
-          Navigator.pop(context);
-        }
+        // if (state.saveSuccess && state) {
+        //   ScaffoldMessenger.of(context).showSnackBar(
+        //     const SnackBar(content: Text("Summary saved successfully!")),
+        //   );
+        //   Navigator.pop(context);
+        // }
         if (state.error != null) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text("Failed to save: ${state.error}")),
@@ -252,6 +254,55 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
             ],
           ),
           const SizedBox(height: 8),
+
+          // Show attachments with delete option
+          if (attachmentUrls.isNotEmpty)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Attachments:', style: TextStyle(fontWeight: FontWeight.bold)),
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: attachmentUrls.length,
+                  itemBuilder: (context, index) {
+                    final url = attachmentUrls[index];
+                    final fileId = _extractAppwriteFileId(url);
+                    final isImage = url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png');
+                    return ListTile(
+                      leading: isImage
+                          ? Image.network(url, width: 40, height: 40, fit: BoxFit.cover)
+                          : Icon(Icons.attach_file),
+                      title: Text(url.split('/').last.split('?').first),
+                      trailing: IconButton(
+                        icon: Icon(Icons.delete, color: Colors.red),
+                        onPressed: () async {
+                          if (fileId != null) {
+                            try {
+                              final storage = Storage(Global.client);
+                              await storage.deleteFile(
+                                bucketId: '683801e4001503aecbc3', // Replace with your bucket ID
+                                fileId: fileId,
+                              );
+                              setState(() {
+                                attachmentUrls.removeAt(index);
+                              });
+                              toastInfo(msg: "Attachment deleted.");
+                            } catch (e) {
+                              toastInfo(msg: "Failed to delete attachment.");
+                            }
+                          } else {
+                            toastInfo(msg: "Invalid file link.");
+                          }
+                        },
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
+
+          const SizedBox(height: 8),
           //// Find a way to make the item grow
           SizedBox(
             height: notes.length > 1 ? 100.h : 60.h,
@@ -360,7 +411,6 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
               onPressed: state.isSaving
                   ? null
                   : () {
-                    // Validation before saving
                     if (notes.isEmpty) {
                       toastInfo(msg: "Please add at least one note.");
                       return;
@@ -392,6 +442,7 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
                         mood: moodValue,
                       ),
                     );
+                    Navigator.pop(context);
                   },
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(100, 30),
@@ -422,6 +473,18 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
       },
     );
   }
+}
+
+/// Helper to extract Appwrite fileId from the file URL
+String? _extractAppwriteFileId(String url) {
+  final uri = Uri.tryParse(url);
+  if (uri == null) return null;
+  final segments = uri.pathSegments;
+  final filesIndex = segments.indexOf('files');
+  if (filesIndex != -1 && filesIndex + 1 < segments.length) {
+    return segments[filesIndex + 1];
+  }
+  return null;
 }
 
 // UnifiedMoodSelector with callback

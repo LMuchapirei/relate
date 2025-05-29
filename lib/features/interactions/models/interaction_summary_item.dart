@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class InteractionSummaryItem {
+  final String id; // Firestore document ID
   final String relationshipId;
   final String userId;
   final List<String> notes;
@@ -11,6 +12,7 @@ class InteractionSummaryItem {
   final DateTime? timestamp;
 
   InteractionSummaryItem({
+    required this.id,
     required this.relationshipId,
     required this.userId,
     required this.notes,
@@ -21,8 +23,10 @@ class InteractionSummaryItem {
     this.timestamp,
   });
 
-  factory InteractionSummaryItem.fromMap(Map<String, dynamic> map) {
+  factory InteractionSummaryItem.fromDoc(DocumentSnapshot doc) {
+    final map = doc.data() as Map<String, dynamic>;
     return InteractionSummaryItem(
+      id: doc.id,
       relationshipId: map['relationship_id'] ?? '',
       userId: map['user_id'] ?? '',
       notes: List<String>.from(map['notes'] ?? []),

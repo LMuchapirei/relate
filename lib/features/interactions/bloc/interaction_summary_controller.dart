@@ -64,7 +64,28 @@ class InteractionSummaryController {
         .get();
 
     return querySnapshot.docs
-        .map((doc) => InteractionSummaryItem.fromMap(doc.data()))
+        .map((doc) => InteractionSummaryItem.fromDoc(doc))
         .toList();
+  }
+
+  /// Deletes a summary for a given userId, relationshipId, and summaryId.
+  /// Returns true if successful, false if the document did not exist.
+  Future<bool> deleteSummary({
+    required String userId,
+    required String relationshipId,
+    required String summaryId,
+  }) async {
+    final docRef = FirebaseFirestore.instance
+        .collection('my_interaction_summary')
+        .doc(userId)
+        .collection(relationshipId)
+        .doc(summaryId);
+
+    final doc = await docRef.get();
+    if (!doc.exists) {
+      return false;
+    }
+    await docRef.delete();
+    return true;
   }
 }

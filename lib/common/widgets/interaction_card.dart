@@ -10,6 +10,10 @@ import '../../pages/interaction_summary.dart';
 import '../values/enums.dart';
 import 'attachment_preview.dart';
 import 'modals.dart';
+import 'package:flutter_pdfview/flutter_pdfview.dart'; // For PDF thumbnails (optional)
+import 'package:video_thumbnail/video_thumbnail.dart'; // For video thumbnails (optional)
+import 'package:mime/mime.dart'; // For mime type detection
+import 'package:flutter_svg/flutter_svg.dart';
 
 class InteractionExpansionCard extends StatefulWidget {
   final IconData icon;
@@ -34,11 +38,20 @@ class InteractionExpansionCard extends StatefulWidget {
 }
 
 class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
+  late PageController _pageController;
+  int _selectedSummaryIndex = 0;
 
   @override
   void initState() {
     super.initState();
+    _pageController = PageController();
   }
+  @override
+  void dispose() {
+    super.dispose();
+    _pageController.dispose();
+  }
+
   List<MediaHiveItem> _mediaList = [];
 
 
@@ -222,7 +235,6 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                                 print('Profile selected');
                                 break;
                               case MenuOptions.summaries:
-                              print("Summaries lookup");
                               // Fetch summaries using the controller
                               final userId = FirebaseAuth.instance.currentUser?.uid;
                               if (userId != null) {
@@ -230,36 +242,177 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                                   userId: userId,
                                   relationshipId: widget.interactionId,
                                 );
-                                // For demonstration, print summaries to console
-                                for (final summary in summaries) {
-                                  print('Summary: ${summary.summary}, Notes: ${summary.notes}');
-                                }
-                                // TODO: Show summaries in a dialog, bottom sheet, or navigate to a new screen
-                                showDialog(
+                                showModalBottomSheet(
                                   context: context,
-                                  builder: (context) => AlertDialog(
-                                    title: const Text('Summaries'),
-                                    content: SizedBox(
-                                      width: double.maxFinite,
-                                      child: ListView.builder(
-                                        shrinkWrap: true,
-                                        itemCount: summaries.length,
-                                        itemBuilder: (context, index) {
-                                          final item = summaries[index];
-                                          return ListTile(
-                                            title: Text(item.summary),
-                                            subtitle: Text('Notes: ${item.notes.join(", ")}\nFeeling: ${item.feeling}\nMood: ${item.mood}'),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    actions: [
-                                      TextButton(
-                                        onPressed: () => Navigator.of(context).pop(),
-                                        child: const Text('Close'),
-                                      ),
-                                    ],
-                                  ),
+                                  isScrollControlled: true,
+                                  builder: (BuildContext context) {
+                                    return Scaffold(
+                                      backgroundColor: Colors.white24,
+                                      body: Stack(
+                                        children: [
+                                          Positioned.fill(
+                                            child: Center(
+                                              child: SizedBox(
+                                                height: 0.75.sh,
+                                                width: 0.8.sw,
+                                                child: Container(
+                                                padding:  EdgeInsets.symmetric(
+                                                  horizontal: 5.h,
+                                                  vertical: 8.0,
+                                                ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius: BorderRadius.circular(12.0),
+                                                  boxShadow: [
+                                                    BoxShadow(
+                                                      color: Colors.grey.shade300,
+                                                      blurRadius: 8,
+                                                      offset: const Offset(0, 4),
+                                                    ),
+                                                  ],
+                                                ),
+                                                child: PageView.builder(
+                                                  controller: _pageController,
+                                                  onPageChanged: (value) {
+                                                    setState(() {
+                                                      _selectedSummaryIndex = value;
+                                                    });
+                                                  },
+                                                  itemCount: summaries.length,
+                                                  itemBuilder: (context, index) {                                                    
+                                                    final item = summaries[index];
+                                                    return Column(
+                                                      children: [
+                                                        
+                                                        ListTile(
+                                                          title: Text(item.summary),
+                                                          subtitle: Text(
+                                                            'Notes: ${item.notes.join(", ")}\nFeeling: ${item.feeling}\nMood: ${item.mood}',
+                                                            style: const TextStyle(color: Colors.black54),
+                                                          ),
+                                                          onTap: () {
+                                                            // Handle tap if needed
+                                                          },
+                                                        ),
+                                                        // Add this section for file previews
+                                                        if (item.files.isNotEmpty)
+                                                          Padding(
+                                                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                                            child: SizedBox(
+                                                              height: 80.h,
+                                                              child: GridView.builder(
+                                                                shrinkWrap: true,
+                                                                scrollDirection: Axis.horizontal,
+                                                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                                                                  crossAxisCount: 1,
+                                                                  mainAxisSpacing: 8,
+                                                                  crossAxisSpacing: 8,
+                                                                  childAspectRatio: 1,
+                                                                ),
+                                                                itemCount: item.files.length,
+                                                                itemBuilder: (context, fileIndex) {
+                                                                  final fileUrl = item.files[fileIndex];
+                                                                  final mimeType = lookupMimeType(fileUrl) ?? '';
+                                                                  Widget thumb;
+
+                                                                  if (mimeType.startsWith('image/')) {
+                                                                    thumb = Image.network(fileUrl, fit: BoxFit.cover);
+                                                                  } else if (mimeType == 'application/pdf') {
+                                                                    thumb = Container(
+                                                                      color: Colors.red[100],
+                                                                      child: Center(
+                                                                        child: Icon(Icons.picture_as_pdf, color: Colors.red, size: 40.h),
+                                                                      ),
+                                                                    );
+                                                                  } else if (mimeType.startsWith('video/')) {
+                                                                    thumb = Container(
+                                                                      color: Colors.black12,
+                                                                      child: Center(
+                                                                        child: Icon(Icons.videocam, color: Colors.blue, size: 40.h),
+                                                                      ),
+                                                                    );
+                                                                  } else if (mimeType.startsWith('audio/')) {
+                                                                    thumb = Container(
+                                                                      color: Colors.blue[50],
+                                                                      child: Center(
+                                                                        child: Icon(Icons.audiotrack, color: Colors.blue, size: 40.h),
+                                                                      ),
+                                                                    );
+                                                                  } else {
+                                                                    thumb = Container(
+                                                                      color: Colors.grey[200],
+                                                                      child: Center(
+                                                                        child: Icon(Icons.insert_drive_file, color: Colors.grey, size: 40.h),
+                                                                      ),
+                                                                    );
+                                                                  }
+
+                                                                  return GestureDetector(
+                                                                    onTap: () {
+                                                                      // TODO: Open file preview if needed
+                                                                    },
+                                                                    child: ClipRRect(
+                                                                      borderRadius: BorderRadius.circular(8.0),
+                                                                      child: thumb,
+                                                                    ),
+                                                                  );
+                                                                },
+                                                              ),
+                                                            ),
+                                                          ),
+                                                      ],
+                                                    );
+                                                  },
+                                              ),
+                                              ),
+                                            ),
+                                          ),),
+                                           Positioned(
+                                              top: 40,
+                                              right: 0,
+                                              left: 0,
+                                              child: Padding(
+                                                padding: EdgeInsets.symmetric(
+                                                  horizontal: 10.w
+                                                ),
+                                                child: Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                  children: [
+                                                    GestureDetector(
+                                                    onTap: () {
+                                                      Navigator.of(context).pop();
+                                                    },
+                                                    child: Text("Close",style: TextStyle(
+                                                      fontSize: 12.h
+                                                    ),)
+                                                    ),
+                                                    IconButton(
+                                                    icon: Icon(Icons.delete_rounded, color: Colors.black,size: 20.h,),
+                                                    onPressed: () async  {
+                                                      final result = await InteractionSummaryController().deleteSummary(
+                                                        userId: userId,
+                                                        relationshipId: widget.interactionId,
+                                                        summaryId: summaries[_selectedSummaryIndex].id
+                                                      );
+                                                      if(result){
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(content: Text("Summary deleted successfully"))
+                                                        );
+                                                        Navigator.of(context).pop();
+                                                      } else {
+                                                        ScaffoldMessenger.of(context).showSnackBar(
+                                                          const SnackBar(content: Text("Failed to delete summary"))
+                                                        );
+                                                      }
+                                                    },
+                                                  ),
+                                                  ],
+                                                ),
+                                              ))
+                                        ],
+                                      )
+                                    );
+                                  },
                                 );
                               } else {
                                 ScaffoldMessenger.of(context).showSnackBar(
