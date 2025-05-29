@@ -360,20 +360,39 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
               onPressed: state.isSaving
                   ? null
                   : () {
-                      FirebaseAuth.instance.currentUser?.uid == null
-                          ? toastInfo(msg: "You need to be logged in to save.")
-                          : context.read<InteractionSummaryBloc>().add(
-                              SaveSummaryEvent(
-                                userId: FirebaseAuth.instance.currentUser?.uid ?? '',
-                                relationshipId: widget.interactionId,
-                                attachments: List.from(attachmentUrls),
-                                notes: List.from(notes),
-                                summary: summaryController.text,
-                                feeling: feelingController.text,
-                                mood: moodValue,
-                              ),
-                            );
-                    },
+                    // Validation before saving
+                    if (notes.isEmpty) {
+                      toastInfo(msg: "Please add at least one note.");
+                      return;
+                    }
+                    if (summaryController.text.trim().isEmpty) {
+                      toastInfo(msg: "Please enter a summary.");
+                      return;
+                    }
+                    if (feelingController.text.trim().isEmpty) {
+                      toastInfo(msg: "Please describe how you felt.");
+                      return;
+                    }
+                    if (moodValue == 0.0) {
+                      toastInfo(msg: "Please select your mood.");
+                      return;
+                    }
+                    if (FirebaseAuth.instance.currentUser?.uid == null) {
+                      toastInfo(msg: "You need to be logged in to save.");
+                      return;
+                    }
+                    context.read<InteractionSummaryBloc>().add(
+                      SaveSummaryEvent(
+                        userId: FirebaseAuth.instance.currentUser?.uid ?? '',
+                        relationshipId: widget.interactionId,
+                        attachments: List.from(attachmentUrls),
+                        notes: List.from(notes),
+                        summary: summaryController.text,
+                        feeling: feelingController.text,
+                        mood: moodValue,
+                      ),
+                    );
+                  },
               style: ElevatedButton.styleFrom(
                 fixedSize: const Size(100, 30),
                 backgroundColor: Colors.black87,
