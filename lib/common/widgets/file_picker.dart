@@ -94,7 +94,7 @@ final ImagePicker _imagePicker = ImagePicker();
     );
     if (result != null) {
       final file = result.files.first;
-      return {"fileObj":file};
+      return {"fileObject":file.xFile};
     } else {
      return {};
     }
@@ -107,7 +107,7 @@ final ImagePicker _imagePicker = ImagePicker();
     );
     if (result != null) {
       final file = result.files.first;
-      return {"fileObj":file};
+      return {"fileObject":file.xFile};
     } else {
      return {};
     }
@@ -146,8 +146,9 @@ Future<dynamic> showFilePickerOptions(BuildContext context) {
             ListTile(
               leading: const Icon(Icons.picture_as_pdf),
               title: const Text('PDF'),
-              onTap: () {
-                _pickPdfFile(context);
+              onTap: () async {
+                final result  =  await _pickPdfFile(context);
+                Navigator.of(context).pop(result);
               },
             ),
             ListTile(

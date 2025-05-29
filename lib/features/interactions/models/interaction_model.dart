@@ -12,6 +12,7 @@ class Interaction {
     final String frequency;
     final String priority;
     final String selectedRedirectApp;
+    final String relationshipId;
     final DateTime? selectedDate;
     final TimeOfDay? selectedTime;
     final String? createdAt;
@@ -22,6 +23,7 @@ class Interaction {
       this.notes = "",
       this.frequency = "",
       this.priority = "",
+      this.relationshipId = "",
       this.selectedDate,
       this.selectedTime,
       this.selectedRedirectApp = "",
@@ -34,6 +36,7 @@ class Interaction {
       return {
         'title': title,
         'notes': notes,
+        'relationshipId':relationshipId,
         'priority': priority,
         'frequency': frequency,
         'selectedRedirectApp': selectedRedirectApp,
@@ -61,6 +64,7 @@ class Interaction {
       frequency: data['frequency'] ?? '',
       priority: data['priority'] ?? '',
       selectedRedirectApp: data['selectedRedirectApp'] ?? '',
+      relationshipId: data['relationshipId'] ?? '',
       selectedDate: timestamp?.toDate(),
       selectedTime: (timeString != null && timeString.isNotEmpty)
           ? deserializeTimeOfDay(timeString)

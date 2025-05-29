@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
 import 'package:relate/features/relationship/models/relationship_model.dart';
 import 'package:relate/pages/relationship_screen.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 import '../common/widgets/modals.dart';
 import '../common/widgets/manage_relation.dart';
+import '../features/interactions/bloc/interaction_events.dart';
 import '../features/relationship/bloc/relationship_bloc.dart';
 import '../features/relationship/bloc/relationship_state.dart';
 import '../features/relationship/widgets/relationship_form.dart';
@@ -22,7 +24,7 @@ class RelationshipsScreen extends StatefulWidget {
 
 class _RelationshipsScreenState extends State<RelationshipsScreen> {
   List<bool> isExpandedList = List.generate(5, (index) => false);
-
+  
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -225,6 +227,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
           )).copyWith(dividerColor: Colors.transparent),
           child: GestureDetector(
             onTap: () {
+              context.read<InteractionListBloc>().add(LoadScheduledInteractions());
               Navigator.of(context).push(MaterialPageRoute(
                   builder: (context) =>  RelationshipDetailsScreen(
                     relationship:relationship

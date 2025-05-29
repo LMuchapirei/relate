@@ -16,6 +16,8 @@ import '../../pages/welcome/bloc/welcome_bloc.dart';
 import '../../pages/welcome/welcome.dart';
 import '../values/constants.dart';
 import 'names.dart';
+import 'package:relate/features/interactions/bloc/interaction_summary_bloc.dart';
+import 'package:relate/features/interactions/bloc/interaction_summary_controller.dart';
 
 
 class AppPages {
@@ -52,8 +54,8 @@ static List<dynamic> otherProviders(BuildContext context){
     BlocProvider(create: (_)=> RelationShipFormBlocs()),
     BlocProvider(create: (_)=> RelationshipListBloc()..add(LoadRelationships())),
     BlocProvider(create: (_)=> InteractionBloc()),
-    BlocProvider(create: (_)=> InteractionListBloc()..add(LoadScheduledInteractions())),
-
+    BlocProvider(create: (_)=> InteractionListBloc()),
+    BlocProvider(create: (_)=> InteractionSummaryBloc(InteractionSummaryController())), // <-- Added
   ];
 }
 
@@ -90,4 +92,13 @@ class PageEntity {
   });
 
 
+}
+
+
+class MyBlocObserver extends BlocObserver {
+  @override
+  void onChange(BlocBase bloc, Change change) {
+    super.onChange(bloc, change);
+    print('Bloc: ${bloc.runtimeType}, State Change: $change');
+  }
 }

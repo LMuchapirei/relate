@@ -11,7 +11,7 @@ class InteractionController {
   const InteractionController(this.context);
 
 
-  Future<void> scheduleInteraction() async {
+  Future<void> scheduleInteraction(String relationshipId) async {
     final state = context.read<InteractionBloc>().state;
     final interaction = Interaction(
       notes: state.notes,
@@ -22,16 +22,17 @@ class InteractionController {
       selectedRedirectApp: state.selectedRedirectApp,
       title: state.title
     );
-    await saveInteractionToFirestore(interaction);
+    await saveInteractionToFirestore(interaction,relationshipId);
   }
 
-  Future<void> saveInteractionToFirestore(Interaction interaction) async {
+  Future<void> saveInteractionToFirestore(Interaction interaction,String relationshipId) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
       if(user == null) throw Exception("User in not signed in");
       final payload = interaction.toMap();
       payload["type"] = "Outgoing";
       payload["completed"] = false;
+      payload["relationshipId"] = relationshipId;
       await FirebaseFirestore.instance
             .collection("interactions")
             .doc(user.uid)

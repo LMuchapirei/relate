@@ -66,6 +66,7 @@ dependencies:
   hive_flutter:
   uuid:
   appwrite: ^15.0.0
+  equatable: ^2.0.7
 
 dev_dependencies:
   hive_generator:

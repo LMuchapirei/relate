@@ -9,8 +9,9 @@ import 'package:relate/features/interactions/bloc/interaction_events.dart';
 
 class ScheduleInteractionScreen extends StatefulWidget {
   final ScrollController controller;
+  final String relationshipId;
 
-  const ScheduleInteractionScreen({super.key, required this.controller});
+  const ScheduleInteractionScreen({super.key, required this.controller,required this.relationshipId});
   
   @override
   _ScheduleInteractionScreenState createState() =>
@@ -155,16 +156,17 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
           ),
           const SizedBox(width: 16),
            DropdownButton<String>(
-              // value: ,
+              value: selectedRepeat,
               hint: const Text('Frequency'),
               onChanged: (String? newValue) {
                 if(newValue != null){
                     context.read<InteractionBloc>().add(FrequencyEvent(newValue));
+                    selectedRepeat = newValue;
                 }
               },
               items: repeatOptions.map<DropdownMenuItem<String>>((String repeatPattern) {
                 return DropdownMenuItem<String>(
-                  value: selectedRepeat,
+                  value: repeatPattern,
                   child: Text(repeatPattern),
                 );
               }).toList(),
@@ -357,6 +359,9 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
                 onChanged: (String? newValue) {
                   context.read<InteractionBloc>().add(SelectedRedirectAppEvent(newValue ?? ""
                   ));
+                  setState(() {
+                    selectedApp = newValue;
+                  });
                 },
                 items: appOptions.map<DropdownMenuItem<String>>((String app) {
                   return DropdownMenuItem<String>(
@@ -375,6 +380,9 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
                 value: selectedPriority,
                 onChanged: (String? newValue) {
                     context.read<InteractionBloc>().add(PriorityEvent(newValue ?? ""));
+                    setState(() {
+                      selectedPriority = newValue;
+                    });
                 },
                 items: priorityOptions
                     .map<DropdownMenuItem<String>>((String priority) {
@@ -398,7 +406,7 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
         ElevatedButton(
           onPressed: () async {
             // Handle Add action
-            await InteractionController(context).scheduleInteraction();
+            await InteractionController(context).scheduleInteraction(widget.relationshipId);
             Navigator.pop(context);
           },
           style: ElevatedButton.styleFrom(

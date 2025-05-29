@@ -40,6 +40,18 @@ class InteractionFormStates {
      );
   }
 
+  @override
+  String toString() {
+    return {
+      "title":title,
+      "notes":notes,
+      "frequency":frequency,
+      "priority":priority,
+      "selectedRedirectApp":selectedRedirectApp,
+      
+    }.toString();
+  }
+
 }
 
 abstract class InteractionListState {

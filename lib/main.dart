@@ -1,21 +1,17 @@
-import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:relate/common/routes/pages.dart';
-import 'package:relate/pages/dashboard.dart';
-import 'package:relate/pages/relationship_screen.dart';
-import 'package:relate/pages/relationships.dart';
-import 'package:relate/pages/welcome/welcome.dart';
 
-import 'bloc_providers.dart';
-import 'features/auth/screens/sign_in_screen.dart';
-import 'features/register/screens/register.dart';
 import 'global.dart';
 
 void main() async { 
   await Global.init();
+  if(kDebugMode){
+      Bloc.observer = MyBlocObserver();
+  }
   runApp(const MyApp());
 }
 

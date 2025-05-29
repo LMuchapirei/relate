@@ -12,10 +12,11 @@ import '../common/widgets/date_pil.dart';
 import '../common/widgets/interaction_card.dart';
 import '../common/widgets/month_year_picker.dart';
 import '../common/widgets/mood_selection.dart';
+import '../features/interactions/models/interaction_model.dart';
 
 class RelationshipDetailsScreen extends StatefulWidget {
   final Relationship relationship;
-  const RelationshipDetailsScreen({super.key,required this.relationship});
+  const RelationshipDetailsScreen({super.key, required this.relationship});
 
   @override
   State<RelationshipDetailsScreen> createState() =>
@@ -24,7 +25,7 @@ class RelationshipDetailsScreen extends StatefulWidget {
 
 class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   DateTime? selectedMonth = DateTime.now();
-  Map<String,dynamic> _filterPeriod = {};
+  Map<String, dynamic> _filterPeriod = {};
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -52,7 +53,8 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                         padding: EdgeInsets.symmetric(
                           horizontal: 4.w,
                         ),
-                        child: _buildInteractionCard(widget.relationship.relationshipType),
+                        child: _buildInteractionCard(
+                            widget.relationship.relationshipType),
                       )
                     ],
                   ),
@@ -77,17 +79,29 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                     child: _buildInteractionSummaryHeader(context)),
                 if (selectedMonth != null)
                   SliverToBoxAdapter(child: _buildMonthSelectionDate()),
-                SliverToBoxAdapter(
-                  child: SizedBox(
-                    width: MediaQuery.of(context).size.width,
-                    height: MediaQuery.of(context).size.height,
-                    child: TabBarView(
-                      children: [
-                        _buildLiveInteractionList(context),
-                        _buildInteractionList(context),
-                      ],
-                    ),
-                  ),
+                BlocConsumer<InteractionListBloc, InteractionListState>(
+                  listener: (context, state) {
+                  },
+                  builder: (context, state) {
+                   List<Interaction> filteredByRelationshipId = [];
+                   filteredByRelationshipId = state.scheduledInteractions
+                      .where(
+                        (element) => element.relationshipId == widget.relationship.id,
+                      )
+                      .toList();
+                    return SliverToBoxAdapter(
+                      child: SizedBox(
+                        width: MediaQuery.of(context).size.width,
+                        height: filteredByRelationshipId.isEmpty ? 100 : MediaQuery.of(context).size.height,
+                        child: TabBarView(
+                          children: [
+                            _buildLiveInteractionList(context,filteredByRelationshipId),
+                            _buildInteractionList(context),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ],
             ),
@@ -111,6 +125,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                           builder: (context, controller) {
                             return ScheduleInteractionScreen(
                               controller: controller,
+                              relationshipId: widget.relationship.id ?? "",
                             );
                           }),
                       isScroll: true);
@@ -166,7 +181,8 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   }
 
   Widget _buildMonthSelectionDate() {
-    final dates = getDatesOfMonth(selectedMonth!);//generateMonthDates(selectedMonth!);
+    final dates =
+        getDatesOfMonth(selectedMonth!); //generateMonthDates(selectedMonth!);
     return SizedBox(
         height: 70.h,
         width: MediaQuery.of(context).size.width,
@@ -178,12 +194,12 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
               return GestureDetector(
                 onTap: () {
                   setState(() {
-                  _filterPeriod = date;
+                    _filterPeriod = date;
                   });
-
                 },
                 child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
+                  padding:
+                      EdgeInsets.symmetric(horizontal: 10.w, vertical: 5.h),
                   margin: EdgeInsets.all(5.h),
                   width: 60.w,
                   decoration: BoxDecoration(
@@ -222,17 +238,19 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
 
   Widget _buildInteractionCard(String relationshipType) {
     return BlocConsumer<InteractionListBloc, InteractionListState>(
-      listener: (context, state) {
-
-      },
+      listener: (context, state) {},
       builder: (context, state) {
         var interactions = "No Interactions";
         var scheduled = 0;
-        if(state is InteractionListLoaded){
-          if(state.scheduledInteractions.isNotEmpty){
+        if (state is InteractionListLoaded) {
+          if (state.scheduledInteractions.isNotEmpty) {
             interactions = "${state.scheduledInteractions.length} Interactions";
           }
-           scheduled = state.scheduledInteractions.map((e)=> e.selectedDate !=null && e.selectedDate!.isAfter(DateTime.now())).length;
+          scheduled = state.scheduledInteractions
+              .map((e) =>
+                  e.selectedDate != null &&
+                  e.selectedDate!.isAfter(DateTime.now()))
+              .length;
         }
         return Container(
           decoration: BoxDecoration(
@@ -285,7 +303,8 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.event_available, color: Colors.black),
+                          const Icon(Icons.event_available,
+                              color: Colors.black),
                           Text(
                             'Done',
                             style:
@@ -346,11 +365,11 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-         Column(
+        Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Interaction Summary',
+              'Interactions',
               style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -396,18 +415,22 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
     );
   }
 
-  Widget _buildLiveInteractionList(BuildContext context) {
+  Widget _buildLiveInteractionList(BuildContext context,List<Interaction> filteredByRelationshipId) {
     return BlocConsumer<InteractionListBloc, InteractionListState>(
         builder: (context, state) {
           if (state is! InteractionListLoaded) {
             return const Center(
-              child: Text("Failed to load interaction Lyst"),
+              child: Text("Failed to load interaction List"),
+            );
+          }
+          if (filteredByRelationshipId.isEmpty) {
+            return const Center(
+              child: Text("No scheduled interactions"),
             );
           }
           return ListView(
-            children:
-                List.generate(state.scheduledInteractions.length, (index) {
-              final itemToRender = state.scheduledInteractions[index];
+            children: List.generate(filteredByRelationshipId.length, (index) {
+              final itemToRender = filteredByRelationshipId[index];
               return Slidable(
                 startActionPane: ActionPane(
                   motion: const StretchMotion(),

@@ -209,14 +209,19 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                                     maxChildSize: 0.9,
                                     initialChildSize: 0.9,
                                     builder: (context,controller) {
-                                      return InteractionSummaryScreen(controller: controller,interactionId: widget.interactionId,);
+                                        return InteractionSummaryScreen(
+                                        controller: controller,
+                                        interactionId: widget.interactionId,
+                                        );
                                     }
                                   ),isScroll: true);
-                                print('Settings selected');
                                 break;
                               case MenuOptions.bookmark:
                                 print('Profile selected');
                                 break;
+                              case MenuOptions.summaries:
+                              print("Summaries lookup");
+                              break;
                               case MenuOptions.share:
                                 print('Logout selected');
                                 break;
@@ -227,17 +232,17 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                           },
                           itemBuilder: (BuildContext context) => <PopupMenuEntry<MenuOptions>>[
                             const PopupMenuItem<MenuOptions>(
-                              value: MenuOptions.delete,
-                              child: ListTile(
-                                leading: Icon(Icons.delete),
-                                title: Text('Delete'),
-                              ),
-                            ),
-                            const PopupMenuItem<MenuOptions>(
                               value: MenuOptions.edit,
                               child: ListTile(
                                 leading: Icon(Icons.edit),
-                                title: Text('Edit'),
+                                title: Text('Add Summary'),
+                              ),
+                            ),
+                            const PopupMenuItem<MenuOptions>(
+                              value: MenuOptions.summaries,
+                              child: ListTile(
+                                leading: Icon(Icons.summarize),
+                                title: Text('View Summary'),
                               ),
                             ),
                             const PopupMenuItem<MenuOptions>(
@@ -252,6 +257,13 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                               child: ListTile(
                                 leading: Icon(Icons.share),
                                 title: Text('Share'),
+                              ),
+                            ),
+                            const PopupMenuItem<MenuOptions>(
+                              value: MenuOptions.delete,
+                              child: ListTile(
+                                leading: Icon(Icons.delete),
+                                title: Text('Delete'),
                               ),
                             ),
                           ],
