@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:just_audio/just_audio.dart';
 import 'package:relate/common/enties/media_type.dart';
 import 'package:relate/features/interactions/bloc/interaction_file_controller.dart';
 import 'package:relate/features/interactions/bloc/media_hive_item.dart';
+import 'package:relate/features/interactions/bloc/interaction_summary_controller.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:relate/features/interactions/models/interaction_summary_item.dart';
 import '../../pages/interaction_summary.dart';
 import '../values/enums.dart';
 import 'attachment_preview.dart';
@@ -201,7 +203,7 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                         PopupMenuButton<MenuOptions>(
                           icon: const Icon(Icons.more_horiz),
                           color: Colors.white,
-                          onSelected: (MenuOptions result) {
+                          onSelected: (MenuOptions result) async {
                             switch (result) {
                               case MenuOptions.edit:
                                 displayBottomModalSheetLarge(context, 
@@ -221,6 +223,49 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                                 break;
                               case MenuOptions.summaries:
                               print("Summaries lookup");
+                              // Fetch summaries using the controller
+                              final userId = FirebaseAuth.instance.currentUser?.uid;
+                              if (userId != null) {
+                                final summaries = await InteractionSummaryController().getSummaries(
+                                  userId: userId,
+                                  relationshipId: widget.interactionId,
+                                );
+                                // For demonstration, print summaries to console
+                                for (final summary in summaries) {
+                                  print('Summary: ${summary.summary}, Notes: ${summary.notes}');
+                                }
+                                // TODO: Show summaries in a dialog, bottom sheet, or navigate to a new screen
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Summaries'),
+                                    content: SizedBox(
+                                      width: double.maxFinite,
+                                      child: ListView.builder(
+                                        shrinkWrap: true,
+                                        itemCount: summaries.length,
+                                        itemBuilder: (context, index) {
+                                          final item = summaries[index];
+                                          return ListTile(
+                                            title: Text(item.summary),
+                                            subtitle: Text('Notes: ${item.notes.join(", ")}\nFeeling: ${item.feeling}\nMood: ${item.mood}'),
+                                          );
+                                        },
+                                      ),
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () => Navigator.of(context).pop(),
+                                        child: const Text('Close'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                              } else {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(content: Text("User not logged in"))
+                                );
+                              }
                               break;
                               case MenuOptions.share:
                                 print('Logout selected');
