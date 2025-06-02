@@ -1,5 +1,32 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+
+class AttachmentItem {
+  final String url;
+  final String name;
+  final String mime;
+
+  AttachmentItem({
+    required this.url,
+    required this.name,
+    required this.mime,
+  });
+
+  factory AttachmentItem.fromMap(Map<String, dynamic> map) =>
+      AttachmentItem(
+        url: map['url'] ?? '',
+        name: map['name'] ?? '',
+        mime: map['mime'] ?? '',
+      );
+
+  Map<String, dynamic> toMap() => {
+        'url': url,
+        'name': name,
+        'mime': mime,
+      };
+}
+
+
 class InteractionSummaryItem {
   final String id; // Firestore document ID
   final String relationshipId;
@@ -8,7 +35,7 @@ class InteractionSummaryItem {
   final String summary;
   final String feeling;
   final int mood;
-  final List<String> files;
+  final List<AttachmentItem> files;
   final DateTime? timestamp;
 
   InteractionSummaryItem({
@@ -33,7 +60,9 @@ class InteractionSummaryItem {
       summary: map['summary'] ?? '',
       feeling: map['feeling'] ?? '',
       mood: map['mood'] is int ? map['mood'] : (map['mood'] as num?)?.toInt() ?? 0,
-      files: List<String>.from(map['files'] ?? []),
+      files: (map['files'] as List<dynamic>? ?? [])
+          .map((e) => AttachmentItem.fromMap(Map<String, dynamic>.from(e)))
+          .toList(),
       timestamp: map['timestamp'] != null
           ? (map['timestamp'] as Timestamp).toDate()
           : null,

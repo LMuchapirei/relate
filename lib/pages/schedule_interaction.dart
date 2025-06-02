@@ -88,8 +88,6 @@ class _ScheduleInteractionScreenState extends State<ScheduleInteractionScreen> {
               _buildOptionsSection(),
               const SizedBox(height: 16),
               _buildRepeatDropdown(),
-              // const SizedBox(height: 16),
-              // _buildRedirectDropdown(),
               const SizedBox(height: 32),
               _buildActionButtons(context),
               const SizedBox(height: 32),

@@ -3,10 +3,11 @@ import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as appwrite_models;
 import 'package:relate/global.dart';
 import '../models/interaction_summary_item.dart'; // Make sure this import path is correct
+import 'package:mime/mime.dart';
 
 class InteractionSummaryController {
-  /// Uploads a file to Appwrite and returns its public URL.
-  Future<String> uploadFileToAppwrite(String filePath, String bucketId) async {
+  /// Uploads a file to Appwrite and returns a map with url, name, and mime type.
+  Future<Map<String, String>> uploadFileToAppwrite(String filePath, String bucketId) async {
     final storage = Storage(Global.client);
     final file = InputFile.fromPath(path: filePath);
     final appwrite_models.File uploaded = await storage.createFile(
@@ -14,10 +15,15 @@ class InteractionSummaryController {
       fileId: ID.unique(),
       file: file,
     );
-    // Construct the file URL (adjust as needed for your Appwrite setup)
     final fileUrl =
         '${Global.client.endPoint}/storage/buckets/$bucketId/files/${uploaded.$id}/view?project=${Global.client.config['project']}';
-    return fileUrl;
+    final fileName = filePath.split('/').last;
+    final mimeType = lookupMimeType(filePath) ?? 'application/octet-stream';
+    return {
+      'url': fileUrl,
+      'name': fileName,
+      'mime': mimeType,
+    };
   }
 
   Future<void> saveSummary({
@@ -27,7 +33,7 @@ class InteractionSummaryController {
     required String summary,
     required String feeling,
     required double mood,
-    List<String>? fileUrls,
+    List<Map<String, String>>? attachments, // <-- Now expects list of maps
   }) async {
     final summaryData = {
       'relationship_id': relationshipId,
@@ -36,7 +42,7 @@ class InteractionSummaryController {
       'summary': summary,
       'feeling': feeling,
       'mood': mood,
-      'files': fileUrls ?? [],
+      'files': attachments ?? [],
       'timestamp': FieldValue.serverTimestamp(),
     };
 
@@ -46,8 +52,8 @@ class InteractionSummaryController {
     await FirebaseFirestore.instance
         .collection('my_interaction_summary')
         .doc(userId)
-        .collection(relationshipId) // <-- Use relationshipId as collection name
-        .doc(summaryId)             // <-- Unique summary doc ID
+        .collection(relationshipId)
+        .doc(summaryId)
         .set(summaryData);
   }
 

@@ -1,74 +1,87 @@
-
-
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:relate/common/utils.dart';
 
 class Interaction {
-    final String? id;
-    final String title;
-    final String notes;
-    final String frequency;
-    final String priority;
-    final String selectedRedirectApp;
-    final String relationshipId;
-    final DateTime? selectedDate;
-    final TimeOfDay? selectedTime;
-    final String? createdAt;
+  final String? id;
+  final String title;
+  final String notes;
+  final String frequency;
+  final String priority;
+  final String selectedRedirectApp;
+  final String relationshipId;
+  final DateTime? selectedDate;
+  final TimeOfDay? selectedTime;
+  final String? createdAt;
 
-    const Interaction({
-      this.id,
-      this.title = "",
-      this.notes = "",
-      this.frequency = "",
-      this.priority = "",
-      this.relationshipId = "",
-      this.selectedDate,
-      this.selectedTime,
-      this.selectedRedirectApp = "",
-      this.createdAt
-    });
+  const Interaction({
+    this.id,
+    this.title = "",
+    this.notes = "",
+    this.frequency = "",
+    this.priority = "",
+    this.relationshipId = "",
+    this.selectedDate,
+    this.selectedTime,
+    this.selectedRedirectApp = "",
+    this.createdAt,
+  });
 
-    Map<String, dynamic> toMap() {
-      final selectedDateObject = selectedDate != null ? Timestamp.fromDate(selectedDate!) :  null ;
-      final selectedTimeString = selectedTime != null ? serializeTimeOfDay(selectedTime!) :  "" ;
-      return {
-        'title': title,
-        'notes': notes,
-        'relationshipId':relationshipId,
-        'priority': priority,
-        'frequency': frequency,
-        'selectedRedirectApp': selectedRedirectApp,
-        'selectedDate': selectedDateObject,
-        'selectedTime': selectedTimeString,
-        'createdAt':FieldValue.serverTimestamp(),
-      };
+  Map<String, dynamic> toMap() {
+    final selectedDateString = selectedDate?.toIso8601String();
+    final selectedTimeString = selectedTime != null ? serializeTimeOfDay(selectedTime!) : "";
+    return {
+      'title': title,
+      'notes': notes,
+      'relationshipId': relationshipId,
+      'priority': priority,
+      'frequency': frequency,
+      'selectedRedirectApp': selectedRedirectApp,
+      'selectedDate': selectedDateString,
+      'selectedTime': selectedTimeString,
+      'createdAt': DateTime.now().toIso8601String(),
+    };
   }
 
-    factory Interaction.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-    final timestamp = data['selectedDate'] as Timestamp?;
-    final timeString = data['selectedTime'] as String?;
-    final createdAtTimestamp = data['createdAt'] as Timestamp?;
+  /// Factory for Appwrite document
+  factory Interaction.fromMap(Map<String, dynamic> map) {
+    // Appwrite stores dates as ISO8601 strings
+    DateTime? selectedDate;
+    if (map['selectedDate'] != null && map['selectedDate'] is String) {
+      selectedDate = DateTime.tryParse(map['selectedDate']);
+    }
+    
+    TimeOfDay? selectedTime;
+    if (map['selectedTime'] != null && map['selectedTime'] is String) {
+      final DateTime? timeDate = DateTime.tryParse(map['selectedTime']);
+      if (timeDate != null) {
+        selectedTime = TimeOfDay(hour: timeDate.hour, minute: timeDate.minute);
+      }
+    }
 
     String? createdAtFormatted;
-    if (createdAtTimestamp != null) {
-      createdAtFormatted = DateFormat('d MMMM yy').format(createdAtTimestamp.toDate());
+    if (map['\$createdAt'] != null && map['\$createdAt'] is String) {
+      final dt = DateTime.tryParse(map['\$createdAt']);
+      if (dt != null) {
+        createdAtFormatted = DateFormat('d MMMM yy').format(dt);
+      }
+    } else if (map['createdAt'] != null && map['createdAt'] is String) {
+      final dt = DateTime.tryParse(map['createdAt']);
+      if (dt != null) {
+        createdAtFormatted = DateFormat('d MMMM yy').format(dt);
+      }
     }
 
     return Interaction(
-      id: doc.id,
-      title: data['title'] ?? '',
-      notes: data['notes'] ?? '',
-      frequency: data['frequency'] ?? '',
-      priority: data['priority'] ?? '',
-      selectedRedirectApp: data['selectedRedirectApp'] ?? '',
-      relationshipId: data['relationshipId'] ?? '',
-      selectedDate: timestamp?.toDate(),
-      selectedTime: (timeString != null && timeString.isNotEmpty)
-          ? deserializeTimeOfDay(timeString)
-          : null,
+      id: map['\$id'] ?? map['id'],
+      title: map['title'] ?? '',
+      notes: map['notes'] ?? '',
+      frequency: map['frequency'] ?? '',
+      priority: map['priority'] ?? '',
+      selectedRedirectApp: map['selectedRedirectApp'] ?? '',
+      relationshipId: map['relationshipId'] ?? '',
+      selectedDate: selectedDate,
+      selectedTime: selectedTime,
       createdAt: createdAtFormatted ?? '',
     );
   }

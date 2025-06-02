@@ -29,7 +29,7 @@ class InteractionSummaryBloc extends Bloc<InteractionSummaryEvent, InteractionSu
           summary: event.summary,
           feeling: event.feeling,
           mood: event.mood,
-          fileUrls: event.attachments,
+          attachments: event.attachments
         ).then((_){
             emit(state.copyWith(isSaving: false, saveSuccess: true));
         });

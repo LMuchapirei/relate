@@ -6,6 +6,7 @@ import 'package:relate/features/interactions/bloc/media_hive_item.dart';
 import 'package:relate/features/interactions/bloc/interaction_summary_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:relate/features/interactions/models/interaction_summary_item.dart';
+import 'package:video_player/video_player.dart';
 import '../../pages/interaction_summary.dart';
 import '../values/enums.dart';
 import 'attachment_preview.dart';
@@ -14,6 +15,7 @@ import 'package:flutter_pdfview/flutter_pdfview.dart'; // For PDF thumbnails (op
 import 'package:video_thumbnail/video_thumbnail.dart'; // For video thumbnails (optional)
 import 'package:mime/mime.dart'; // For mime type detection
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:relate/common/widgets/video_player.dart'; // For VideoPlayerView
 
 class InteractionExpansionCard extends StatefulWidget {
   final IconData icon;
@@ -296,68 +298,68 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                                                         ),
                                                         // Add this section for file previews
                                                         if (item.files.isNotEmpty)
-                                                          Padding(
-                                                            padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                                            child: SizedBox(
-                                                              height: 80.h,
-                                                              child: GridView.builder(
-                                                                shrinkWrap: true,
-                                                                scrollDirection: Axis.horizontal,
-                                                                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                                                                  crossAxisCount: 1,
-                                                                  mainAxisSpacing: 8,
-                                                                  crossAxisSpacing: 8,
-                                                                  childAspectRatio: 1,
-                                                                ),
-                                                                itemCount: item.files.length,
-                                                                itemBuilder: (context, fileIndex) {
-                                                                  final fileUrl = item.files[fileIndex];
-                                                                  final mimeType = lookupMimeType(fileUrl) ?? '';
-                                                                  Widget thumb;
-
-                                                                  if (mimeType.startsWith('image/')) {
-                                                                    thumb = Image.network(fileUrl, fit: BoxFit.cover);
-                                                                  } else if (mimeType == 'application/pdf') {
-                                                                    thumb = Container(
-                                                                      color: Colors.red[100],
-                                                                      child: Center(
-                                                                        child: Icon(Icons.picture_as_pdf, color: Colors.red, size: 40.h),
-                                                                      ),
-                                                                    );
-                                                                  } else if (mimeType.startsWith('video/')) {
-                                                                    thumb = Container(
-                                                                      color: Colors.black12,
-                                                                      child: Center(
-                                                                        child: Icon(Icons.videocam, color: Colors.blue, size: 40.h),
-                                                                      ),
-                                                                    );
-                                                                  } else if (mimeType.startsWith('audio/')) {
-                                                                    thumb = Container(
-                                                                      color: Colors.blue[50],
-                                                                      child: Center(
-                                                                        child: Icon(Icons.audiotrack, color: Colors.blue, size: 40.h),
-                                                                      ),
-                                                                    );
-                                                                  } else {
-                                                                    thumb = Container(
-                                                                      color: Colors.grey[200],
-                                                                      child: Center(
-                                                                        child: Icon(Icons.insert_drive_file, color: Colors.grey, size: 40.h),
-                                                                      ),
-                                                                    );
-                                                                  }
-
-                                                                  return GestureDetector(
-                                                                    onTap: () {
-                                                                      // TODO: Open file preview if needed
-                                                                    },
+                                                          SizedBox(
+                                                            height: 500.h, // Adjust height as needed
+                                                            child: ListView.builder(
+                                                              shrinkWrap: true,
+                                                              scrollDirection: Axis.vertical,
+                                                              itemCount: item.files.length,
+                                                              itemBuilder: (context, fileIndex) {
+                                                                final attachment = item.files[fileIndex];
+                                                                final fileUrl = attachment.url;
+                                                                final mimeType = attachment.mime;
+                                                                if (mimeType.startsWith('image/')) {
+                                                                  // Show image
+                                                                  return Padding(
+                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
                                                                     child: ClipRRect(
                                                                       borderRadius: BorderRadius.circular(8.0),
-                                                                      child: thumb,
+                                                                      child: Image.network(
+                                                                        fileUrl,
+                                                                        fit: BoxFit.cover,
+                                                                        height: 180,
+                                                                        width: double.infinity,
+                                                                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
+                                                                      ),
                                                                     ),
                                                                   );
-                                                                },
-                                                              ),
+                                                                } else if (mimeType.startsWith('video/')) {
+                                                                  // Show video using VideoPlayerView
+                                                                  return Padding(
+                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                                                    child: SizedBox(
+                                                                      height: 180,
+                                                                      child: VideoPlayerView(
+                                                                        url: fileUrl,
+                                                                        dataSourceType: DataSourceType.network,
+                                                                      ),
+                                                                    ),
+                                                                  );
+                                                                } else if (mimeType == 'application/pdf') {
+                                                                  // Skip PDF for now
+                                                                  return const SizedBox.shrink();
+                                                                } else if (mimeType.startsWith('audio/')) {
+                                                                  // Show audio icon
+                                                                  return Padding(
+                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                                                    child: ListTile(
+                                                                      leading: Icon(Icons.audiotrack, color: Colors.blue, size: 40),
+                                                                      title: Text(fileUrl.split('/').last.split('?').first),
+                                                                      subtitle: const Text('Audio file'),
+                                                                    ),
+                                                                  );
+                                                                } else {
+                                                                  // Generic file
+                                                                  return Padding(
+                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
+                                                                    child: ListTile(
+                                                                      leading: Icon(Icons.insert_drive_file, color: Colors.grey, size: 40),
+                                                                      title: Text(fileUrl.split('/').last.split('?').first),
+                                                                      subtitle: const Text('File'),
+                                                                    ),
+                                                                  );
+                                                                }
+                                                              },
                                                             ),
                                                           ),
                                                       ],
@@ -421,10 +423,8 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                               }
                               break;
                               case MenuOptions.share:
-                                print('Logout selected');
                                 break;
                               case MenuOptions.delete:
-                                // TODO: Handle this case.
                                 break;
                             }
                           },

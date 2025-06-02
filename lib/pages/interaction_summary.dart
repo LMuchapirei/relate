@@ -17,6 +17,7 @@ import 'package:relate/features/interactions/bloc/interaction_summary_events.dar
 import 'package:relate/features/interactions/bloc/interaction_summary_state.dart';
 import 'package:relate/features/interactions/bloc/interaction_summary_controller.dart';
 import 'package:relate/global.dart';
+import 'package:mime/mime.dart';
 
 import '../common/widgets/file_picker.dart';
 
@@ -44,7 +45,7 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
   final InteractionSummaryController summaryControllerHelper = InteractionSummaryController();
   double moodValue = 0.0;
   List<String> notes = [];
-  List<String> attachmentUrls = [];
+  List<Map<String, String>> attachments = []; // <-- Updated to hold attachment maps
 
   void _addNote(BuildContext context) {
     if (noteController.text.isEmpty) {
@@ -210,14 +211,14 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
                   if(result == null) return; // User cancelled the picker
                   final file = result["fileObject"];
                   if (file is XFile) {
-                    // Upload to Appwrite and get URL
-                    final fileUrl = await summaryControllerHelper.uploadFileToAppwrite(
+                    // Upload to Appwrite and get url, name, mime
+                    final fileMeta = await summaryControllerHelper.uploadFileToAppwrite(
                       file.path,
                       '683801e4001503aecbc3', // Replace with your actual bucket ID
                     );
-                    if (fileUrl.isNotEmpty) {
+                    if (fileMeta.isNotEmpty) {
                       setState(() {
-                        attachmentUrls.add(fileUrl);
+                        attachments.add(fileMeta);
                       });
                       toastInfo(msg: "Attachment uploaded.");
                     }
@@ -230,14 +231,13 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
                   final result = await showVoiceNotePickerOptions(context);
                   final file = result["fileObject"];
                   if (file is XFile) {
-                    // Upload to Appwrite and get URL
-                    final fileUrl = await summaryControllerHelper.uploadFileToAppwrite(
+                    final fileMeta = await summaryControllerHelper.uploadFileToAppwrite(
                       file.path,
-                      '683801e4001503aecbc3', // Replace with your actual bucket ID
+                      '683801e4001503aecbc3',
                     );
-                    if (fileUrl.isNotEmpty) {
+                    if (fileMeta.isNotEmpty) {
                       setState(() {
-                        attachmentUrls.add(fileUrl);
+                        attachments.add(fileMeta);
                       });
                       toastInfo(msg: "Voice attachment uploaded.");
                     }
@@ -256,7 +256,7 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
           const SizedBox(height: 8),
 
           // Show attachments with delete option
-          if (attachmentUrls.isNotEmpty)
+          if (attachments.isNotEmpty)
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -264,16 +264,20 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
                 ListView.builder(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
-                  itemCount: attachmentUrls.length,
+                  itemCount: attachments.length,
                   itemBuilder: (context, index) {
-                    final url = attachmentUrls[index];
+                    final att = attachments[index];
+                    final url = att['url'] ?? '';
+                    final name = att['name'] ?? '';
+                    final mime = att['mime'] ?? '';
                     final fileId = _extractAppwriteFileId(url);
-                    final isImage = url.endsWith('.jpg') || url.endsWith('.jpeg') || url.endsWith('.png');
+                    final isImage = mime.startsWith('image/');
                     return ListTile(
                       leading: isImage
                           ? Image.network(url, width: 40, height: 40, fit: BoxFit.cover)
                           : Icon(Icons.attach_file),
-                      title: Text(url.split('/').last.split('?').first),
+                      title: Text(name),
+                      subtitle: Text(mime),
                       trailing: IconButton(
                         icon: Icon(Icons.delete, color: Colors.red),
                         onPressed: () async {
@@ -281,11 +285,11 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
                             try {
                               final storage = Storage(Global.client);
                               await storage.deleteFile(
-                                bucketId: '683801e4001503aecbc3', // Replace with your bucket ID
+                                bucketId: '683801e4001503aecbc3',
                                 fileId: fileId,
                               );
                               setState(() {
-                                attachmentUrls.removeAt(index);
+                                attachments.removeAt(index);
                               });
                               toastInfo(msg: "Attachment deleted.");
                             } catch (e) {
@@ -408,9 +412,8 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: [
             ElevatedButton(
-              onPressed: state.isSaving
-                  ? null
-                  : () {
+              onPressed: 
+                  () {
                     if (notes.isEmpty) {
                       toastInfo(msg: "Please add at least one note.");
                       return;
@@ -435,7 +438,7 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
                       SaveSummaryEvent(
                         userId: FirebaseAuth.instance.currentUser?.uid ?? '',
                         relationshipId: widget.interactionId,
-                        attachments: List.from(attachmentUrls),
+                        attachments: List.from(attachments), // <-- Pass attachments as list of maps
                         notes: List.from(notes),
                         summary: summaryController.text,
                         feeling: feelingController.text,
@@ -451,9 +454,8 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
                   borderRadius: BorderRadius.circular(24),
                 ),
               ),
-              child: state.isSaving
-                  ? const CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
-                  : const Text('Save', style: TextStyle(color: Colors.white)),
+              child: 
+                  const Text('Save', style: TextStyle(color: Colors.white)),
             ),
             ElevatedButton(
               onPressed: () {

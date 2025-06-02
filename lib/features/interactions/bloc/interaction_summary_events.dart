@@ -36,7 +36,7 @@ class UpdateMoodEvent extends InteractionSummaryEvent {
 class SaveSummaryEvent extends InteractionSummaryEvent {
   final String userId;
   final String relationshipId;
-  final List<String> attachments;
+  final List<Map<String,String>> attachments;
   final List<String> notes;
   final String summary;
   final String feeling;
