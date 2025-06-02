@@ -1,70 +1,64 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:intl/intl.dart';
-
-
 class Relationship {
   final String? id;
   final String firstName;
   final String lastName;
-  final String phoneNumber;
-  final double frequency;
-  final double rating;
-  final String relationshipType;
-  final String? createdAt;
+  final String? nickName;
+  final String? phoneNumber;
+  final int? rating;
+  final String? frequency;
+  final String? relationshipType;
+  final String? profileImageUrl;
+  final String? userId;
+  final DateTime? createdAt; // <-- Added
 
   Relationship({
     this.id,
-    this.createdAt,
     required this.firstName,
     required this.lastName,
-    required this.phoneNumber,
-    required this.frequency,
-    required this.rating,
-    required this.relationshipType,
+    this.nickName,
+    this.phoneNumber,
+    this.rating,
+    this.frequency,
+    this.relationshipType,
+    this.profileImageUrl,
+    this.userId,
+    this.createdAt, // <-- Added
   });
+
+  factory Relationship.fromMap(Map<String, dynamic> map) {
+    return Relationship(
+      id: map['\$id'] ?? map['id'], // Appwrite uses $id for document id
+      firstName: map['firstName'] ?? '',
+      lastName: map['lastName'] ?? '',
+      nickName: map['nickName'],
+      phoneNumber: map['phoneNumber'],
+      rating: map['rating'] is int
+          ? map['rating']
+          : (map['rating'] is String ? int.tryParse(map['rating']) : null),
+      frequency: map['frequency'],
+      relationshipType: map['relationshipType'],
+      profileImageUrl: map['profileImageUrl'],
+      userId: map['userId'],
+      createdAt: map['\$createdAt'] != null
+          ? DateTime.tryParse(map['\$createdAt'])
+          : (map['created_at'] is String
+              ? DateTime.tryParse(map['created_at'])
+              : null),
+    );
+  }
 
   Map<String, dynamic> toMap() {
     return {
       'firstName': firstName,
       'lastName': lastName,
+      'nickName': nickName,
       'phoneNumber': phoneNumber,
-      'frequency': frequency,
       'rating': rating,
+      'frequency': frequency,
       'relationshipType': relationshipType,
-      'createdAt': FieldValue.serverTimestamp(),
+      'profileImageUrl': profileImageUrl,
+      'userId': userId,
+      'createdAt': createdAt?.toIso8601String(),
     };
-  }
-
-  factory Relationship.fromFirestore(DocumentSnapshot<Map<String, dynamic>> doc) {
-    final data = doc.data()!;
-    Timestamp? createdAtTimestamp = data['createdAt'] as Timestamp?;
-    String? createdAtString;
-    if (createdAtTimestamp != null) {
-      DateTime createdAtDateTime = createdAtTimestamp.toDate();
-      createdAtString = DateFormat('d MMM yyyy').format(createdAtDateTime);
-    }
-    return Relationship(
-      id: doc.id,
-      firstName: data['firstName'] ?? '',
-      lastName: data['lastName'] ?? '',
-      frequency: data['frequency'] ?? '',
-      phoneNumber: data['phoneNumber'] ?? '',
-      rating: (data['rating'] as num?)?.toDouble() ?? 0.0,
-      relationshipType: data['relationshipType'] ?? '',
-      createdAt: createdAtString ?? ''
-    );
-  }
-
-  @override
-  String toString() {
-    return {
-       'firstName': firstName,
-      'lastName': lastName,
-      'phoneNumber': phoneNumber,
-      'frequency': frequency,
-      'rating': rating,
-      'relationshipType': relationshipType,
-      'createdAt': createdAt
-    }.toString();
   }
 }

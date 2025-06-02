@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:intl/intl.dart';
 import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
 import 'package:relate/features/relationship/models/relationship_model.dart';
 import 'package:relate/pages/relationship_screen.dart';
@@ -138,7 +139,10 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
   }
 
   Widget _buildRelationshipItem(Relationship relationship) {
-    String date = relationship.createdAt ?? '';
+    String date = '';
+    if (relationship.createdAt != null) {
+      date = DateFormat('dd MMM yyyy').format(relationship.createdAt!);
+    }
     return Slidable(
       startActionPane: ActionPane(
         motion: const StretchMotion(),
@@ -257,7 +261,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                                 fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                           Text(
-                            relationship.relationshipType,
+                            relationship.relationshipType ?? "",
                             style: const TextStyle(
                               fontSize: 14,
                               color:   Colors.green,
@@ -269,7 +273,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                     Column(
                       children: [
                         Text(
-                          relationship.rating.toStringAsPrecision(2),
+                          (relationship.rating ?? 0.0).toStringAsPrecision(2),
                           style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,

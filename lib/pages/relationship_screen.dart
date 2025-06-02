@@ -54,7 +54,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                           horizontal: 4.w,
                         ),
                         child: _buildInteractionCard(
-                            widget.relationship.relationshipType),
+                            widget.relationship.relationshipType ?? ""),
                       )
                     ],
                   ),

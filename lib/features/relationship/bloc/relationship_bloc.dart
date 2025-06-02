@@ -1,4 +1,6 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:appwrite/appwrite.dart';
+import 'package:appwrite/models.dart' as appwrite_models;
+// import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -6,8 +8,8 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:relate/common/widgets/flutter_toast.dart';
 import 'package:relate/features/relationship/bloc/relationship_event.dart';
 import 'package:relate/features/relationship/bloc/relationship_state.dart';
-
 import '../models/relationship_model.dart';
+import 'package:relate/global.dart';
 
 class RelationShipFormBlocs extends Bloc<RelationShipEvent,RelationshipFormStates>{
   RelationShipFormBlocs(): super(const RelationshipFormStates()){
@@ -88,15 +90,25 @@ class RelationshipListBloc extends Bloc<RelationShipEvent,RelationshipListState>
         return;
       }
 
-      final relationshipsSnapshot = await FirebaseFirestore.instance
-          .collection('relationships')
-          .doc(user.uid)
-          .collection('my_relationships')
-          .get();
+      // --- Appwrite fetch logic ---
+      final database = Databases(Global.client);
+      // const databaseId = 'your_database_id'; // Replace with your Appwrite DB ID
+      // const collectionId = 'your_collection_id'; // Replace with your Appwrite Collection ID
+      const databaseId = '683d422f003d2714d076'; //db id
+      const collectionId = '683d45f700104e5e6cd1'; // relationship id
 
-      final List<Relationship> relationships = relationshipsSnapshot.docs
-          .map((doc) => Relationship.fromFirestore(doc))
+      final appwrite_models.DocumentList docs = await database.listDocuments(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        queries: [
+          Query.equal('userId', user.uid),
+        ],
+      );
+
+      final List<Relationship> relationships = docs.documents
+          .map((doc) => Relationship.fromMap(doc.data))
           .toList();
+
       emit(RelationshipListLoaded(relationships: relationships));
     } catch (e) {
       if (kDebugMode) {
