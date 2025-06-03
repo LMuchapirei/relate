@@ -1,8 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:relate/common/widgets/modals.dart';
+import 'package:relate/features/relationship/bloc/topic_bloc.dart';
+import 'package:relate/features/relationship/bloc/topic_events.dart';
+import 'package:relate/features/relationship/bloc/topic_states.dart';
+import 'package:relate/features/relationship/bloc/topic_model.dart';
 
 class ManageRelation extends StatefulWidget {
-  const ManageRelation({super.key});
+  final String relationshipId;
+  const ManageRelation({super.key, required this.relationshipId});
 
   @override
   State<ManageRelation> createState() => _ManageRelationState();
@@ -23,19 +30,11 @@ class _ManageRelationState extends State<ManageRelation> {
     ),
   ];
 
-  // Add sample topics log entries
-  final List<TopicLogEntry> _topicsLogs = [
-    TopicLogEntry(
-      date: '15 Mar 2024',
-      topic: 'Career goals and aspirations',
-      notes: 'Discussed potential job changes and further education plans',
-    ),
-    TopicLogEntry(
-      date: '10 Mar 2024',
-      topic: 'Family planning',
-      notes: 'Talked about timeline for having kids and preferred parenting styles',
-    ),
-  ];
+  @override
+  void initState() {
+    super.initState();
+    context.read<TopicsBloc>().add(LoadTopics(widget.relationshipId));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -94,7 +93,29 @@ class _ManageRelationState extends State<ManageRelation> {
                 ),
               ),
               children: [
-                ..._topicsLogs.map((entry) => _buildTopicLogEntry(entry)),
+                BlocBuilder<TopicsBloc, TopicState>(
+                  builder: (context, state) {
+                    if (state is TopicsLoading) {
+                      return const Center(child: CircularProgressIndicator());
+                    } else if (state is TopicsLoaded) {
+                      if (state.topics.isEmpty) {
+                        return Padding(
+                          padding: EdgeInsets.symmetric(vertical: 8.h),
+                          child: Text("No topics yet.", style: TextStyle(fontSize: 14.sp)),
+                        );
+                      }
+                      return Column(
+                        children: state.topics.map((topic) => _buildTopicLogEntry(topic)).toList(),
+                      );
+                    } else if (state is TopicsError) {
+                      return Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8.h),
+                        child: Text(state.error, style: TextStyle(color: Colors.red)),
+                      );
+                    }
+                    return const SizedBox.shrink();
+                  },
+                ),
                 _buildAddNewLogButton('topic'),
               ],
             ),
@@ -131,7 +152,7 @@ class _ManageRelationState extends State<ManageRelation> {
     );
   }
 
-  Widget _buildTopicLogEntry(TopicLogEntry entry) {
+  Widget _buildTopicLogEntry(Topic topic) {
     return Padding(
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: Column(
@@ -141,14 +162,14 @@ class _ManageRelationState extends State<ManageRelation> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                entry.topic,
+                topic.title,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
                   fontSize: 14.sp,
                 ),
               ),
               Text(
-                entry.date,
+                _formatDate(topic.createdAt),
                 style: TextStyle(
                   fontSize: 12.sp,
                   color: Colors.grey[600],
@@ -158,7 +179,7 @@ class _ManageRelationState extends State<ManageRelation> {
           ),
           SizedBox(height: 4.h),
           Text(
-            entry.notes,
+            topic.description,
             style: TextStyle(
               fontSize: 14.sp,
               color: Colors.grey[800],
@@ -175,11 +196,30 @@ class _ManageRelationState extends State<ManageRelation> {
       padding: EdgeInsets.symmetric(horizontal: 16.w, vertical: 8.h),
       child: TextButton.icon(
         onPressed: () {
-          // Handle adding new entry based on type
           if (type == 'birthday') {
             // Handle adding new birthday log entry
           } else {
-            // Handle adding new topic log entry
+            // Show bottom modal to add new topic
+            displayBottomModalSheet(
+              context,
+              isScroll: true,
+              Padding(
+                padding: EdgeInsets.all(16.w),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Add New Topic',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18.sp),
+                    ),
+                    SizedBox(height: 16.h),
+                    _AddTopicForm(
+                      relationshipId: widget.relationshipId,
+                    ),
+                  ],
+                ),
+              ),
+            );
           }
         },
         icon: const Icon(Icons.add),
@@ -208,6 +248,20 @@ class _ManageRelationState extends State<ManageRelation> {
       onTap: onTap,
     );
   }
+
+  String _formatDate(DateTime date) {
+    return "${date.day.toString().padLeft(2, '0')} "
+        "${_monthName(date.month)} "
+        "${date.year}";
+  }
+
+  String _monthName(int month) {
+    const months = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    return months[month - 1];
+  }
 }
 
 class BirthdayLogEntry {
@@ -220,17 +274,73 @@ class BirthdayLogEntry {
   });
 }
 
-// Add new TopicLogEntry class
-class TopicLogEntry {
-  final String date;
-  final String topic;
-  final String notes;
+class _AddTopicForm extends StatefulWidget {
+  final String relationshipId;
+  const _AddTopicForm({required this.relationshipId});
 
-  TopicLogEntry({
-    required this.date,
-    required this.topic,
-    required this.notes,
-  });
+  @override
+  State<_AddTopicForm> createState() => _AddTopicFormState();
+}
+
+class _AddTopicFormState extends State<_AddTopicForm> {
+  final titleController = TextEditingController();
+  final descController = TextEditingController();
+
+  @override
+  void dispose() {
+    titleController.dispose();
+    descController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        TextField(
+          controller: titleController,
+          decoration: const InputDecoration(
+            labelText: 'Title',
+          ),
+        ),
+        const SizedBox(height: 12),
+        TextField(
+          controller: descController,
+          decoration: const InputDecoration(
+            labelText: 'Description',
+          ),
+          maxLines: 3,
+        ),
+        const SizedBox(height: 16),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final title = titleController.text.trim();
+                final desc = descController.text.trim();
+                if (title.isNotEmpty && desc.isNotEmpty) {
+                  context.read<TopicsBloc>().add(
+                    CreateTopic(
+                      relationshipId: widget.relationshipId,
+                      title: title,
+                      description: desc,
+                    ),
+                  );
+                  Navigator.of(context).pop();
+                }
+              },
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
 }
 
 // Helper extension to capitalize strings
@@ -238,4 +348,4 @@ extension StringExtension on String {
   String capitalize() {
     return "${this[0].toUpperCase()}${this.substring(1)}";
   }
-} 
+}
