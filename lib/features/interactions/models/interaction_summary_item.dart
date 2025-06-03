@@ -1,4 +1,4 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
 
 
 class AttachmentItem {
@@ -28,15 +28,15 @@ class AttachmentItem {
 
 
 class InteractionSummaryItem {
-  final String id; // Firestore document ID
+  final String id;
   final String relationshipId;
   final String userId;
   final List<String> notes;
   final String summary;
   final String feeling;
-  final int mood;
+  final double mood;
   final List<AttachmentItem> files;
-  final DateTime? timestamp;
+  final DateTime? createdAt;
 
   InteractionSummaryItem({
     required this.id,
@@ -47,38 +47,44 @@ class InteractionSummaryItem {
     required this.feeling,
     required this.mood,
     required this.files,
-    this.timestamp,
+    this.createdAt,
   });
 
-  factory InteractionSummaryItem.fromDoc(DocumentSnapshot doc) {
-    final map = doc.data() as Map<String, dynamic>;
+  factory InteractionSummaryItem.fromMap(Map<String, dynamic> map) {
     return InteractionSummaryItem(
-      id: doc.id,
-      relationshipId: map['relationship_id'] ?? '',
-      userId: map['user_id'] ?? '',
-      notes: List<String>.from(map['notes'] ?? []),
+      id: map['\$id'] ?? map['id'] ?? '',
+      relationshipId: map['relationshipId'] ?? '',
+      userId: map['userId'] ?? '',
+      notes: (map['notes'] as List?)?.map((e) => e.toString()).toList() ?? [],
       summary: map['summary'] ?? '',
       feeling: map['feeling'] ?? '',
-      mood: map['mood'] is int ? map['mood'] : (map['mood'] as num?)?.toInt() ?? 0,
-      files: (map['files'] as List<dynamic>? ?? [])
-          .map((e) => AttachmentItem.fromMap(Map<String, dynamic>.from(e)))
-          .toList(),
-      timestamp: map['timestamp'] != null
-          ? (map['timestamp'] as Timestamp).toDate()
-          : null,
+      mood: (map['mood'] is int)
+          ? (map['mood'] as int).toDouble()
+          : (map['mood'] is double)
+              ? map['mood']
+              : (map['mood'] is String)
+                  ? double.tryParse(map['mood']) ?? 0.0
+                  : 0.0,
+      files: (map['files'] as List?)
+              ?.map((e) => AttachmentItem.fromMap(jsonDecode(e as String)))
+              .toList() ??
+          [],
+      createdAt: map['createdAt'] != null
+          ? DateTime.tryParse(map['createdAt'])
+          : (map['\$createdAt'] != null
+              ? DateTime.tryParse(map['\$createdAt'])
+              : null),
     );
   }
 
-  Map<String, dynamic> toMap() {
-    return {
-      'relationship_id': relationshipId,
-      'user_id': userId,
-      'notes': notes,
-      'summary': summary,
-      'feeling': feeling,
-      'mood': mood,
-      'files': files,
-      'timestamp': timestamp,
-    };
-  }
+  Map<String, dynamic> toMap() => {
+        'relationshipId': relationshipId,
+        'userId': userId,
+        'notes': notes,
+        'summary': summary,
+        'feeling': feeling,
+        'mood': mood,
+        'files': files.map((e) => e.toMap()).toList(),
+        'createdAt': createdAt?.toIso8601String(),
+      };
 }

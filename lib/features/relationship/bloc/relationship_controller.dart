@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:appwrite/appwrite.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -38,9 +37,7 @@ class RelationshipController {
         profilePath = await uploadImageToAppwrite(userId, state.profilePicture!);
       }
       final payload = {...relationship.toMap(), "profileImageUrl": profilePath};
-
       final database = Databases(Global.client);
-      // Replace with your Appwrite database and collection IDs
       const databaseId = '683d422f003d2714d076'; //db id
       const collectionId = '683d45f700104e5e6cd1'; // relationship id
 
@@ -51,7 +48,7 @@ class RelationshipController {
         data: {
           ...payload,
           'userId': userId,
-          'createdAt': DateTime.now().toIso8601String(), // <-- Add this line
+          'createdAt': DateTime.now().toIso8601String(),
         },
       );
       toastInfo(msg: "Submitted the relationship successfully");

@@ -1,4 +1,5 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:convert';
+
 import 'package:appwrite/appwrite.dart';
 import 'package:appwrite/models.dart' as appwrite_models;
 import 'package:relate/global.dart';
@@ -33,28 +34,33 @@ class InteractionSummaryController {
     required String summary,
     required String feeling,
     required double mood,
-    List<Map<String, String>>? attachments, // <-- Now expects list of maps
+    List<Map<String, String>>? attachments,
   }) async {
-    final summaryData = {
-      'relationship_id': relationshipId,
-      'user_id': userId,
-      'notes': notes,
-      'summary': summary,
-      'feeling': feeling,
-      'mood': mood,
-      'files': attachments ?? [],
-      'timestamp': FieldValue.serverTimestamp(),
-    };
+    try {
+      final database = Databases(Global.client);
+      const databaseId = '683d422f003d2714d076'; 
+      const collectionId = '683ec7aa0031f9c9ceb7';
 
-    // Generate a unique summary ID using timestamp and userId
-    final summaryId = '${DateTime.now().millisecondsSinceEpoch}_$userId';
+      final summaryData = {
+        'relationshipId': relationshipId,
+        'userId': userId,
+        'notes': notes,
+        'summary': summary,
+        'feeling': feeling,
+        'mood': mood,
+        'files': (attachments ?? []).map((e)=>jsonEncode(e)).toList() ?? [],
+        'createdAt': DateTime.now().toIso8601String(),
+      };
 
-    await FirebaseFirestore.instance
-        .collection('my_interaction_summary')
-        .doc(userId)
-        .collection(relationshipId)
-        .doc(summaryId)
-        .set(summaryData);
+      await database.createDocument(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        documentId: ID.unique(),
+        data: summaryData,
+      );
+    } catch (e) {
+      throw Exception('Failed to save summary: $e');
+    }
   }
 
   /// Fetches all summaries for a given userId and relationshipId and parses them to the model.
@@ -62,16 +68,27 @@ class InteractionSummaryController {
     required String userId,
     required String relationshipId,
   }) async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('my_interaction_summary')
-        .doc(userId)
-        .collection(relationshipId)
-        .orderBy('timestamp', descending: true)
-        .get();
+    try {
+      final database = Databases(Global.client);
+      const databaseId = '683d422f003d2714d076'; 
+      const collectionId = '683ec7aa0031f9c9ceb7';
 
-    return querySnapshot.docs
-        .map((doc) => InteractionSummaryItem.fromDoc(doc))
-        .toList();
+      final docs = await database.listDocuments(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        queries: [
+          Query.equal('userId', userId),
+          Query.equal('relationshipId', relationshipId),
+          Query.orderDesc('createdAt'),
+        ],
+      );
+
+      return docs.documents
+          .map((doc) => InteractionSummaryItem.fromMap(doc.data))
+          .toList();
+    } catch (e) {
+      throw Exception('Failed to fetch summaries: $e');
+    }
   }
 
   /// Deletes a summary for a given userId, relationshipId, and summaryId.
@@ -81,17 +98,19 @@ class InteractionSummaryController {
     required String relationshipId,
     required String summaryId,
   }) async {
-    final docRef = FirebaseFirestore.instance
-        .collection('my_interaction_summary')
-        .doc(userId)
-        .collection(relationshipId)
-        .doc(summaryId);
+    try {
+      final database = Databases(Global.client);
+      const databaseId = '683d422f003d2714d076'; 
+      const collectionId = '683ec7aa0031f9c9ceb7';
 
-    final doc = await docRef.get();
-    if (!doc.exists) {
+      await database.deleteDocument(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        documentId: summaryId,
+      );
+      return true;
+    } catch (e) {
       return false;
     }
-    await docRef.delete();
-    return true;
   }
 }
