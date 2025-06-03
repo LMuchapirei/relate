@@ -1,5 +1,7 @@
 // ignore_for_file: prefer_const_constructors, library_private_types_in_public_api
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -61,25 +63,26 @@ class _AddRelationshipScreenState extends State<AddRelationshipScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  // SvgPicture.asset(
-                  //   "assets/images/relationships.svg",
-                  //   // color: card.cardColor,
-                  //   height: 80.w, // Optional: Set height
-                  //   semanticsLabel: 'Logo', // Optional: Screen reader description
-                  //  ),
                   if(state.profilePicture != null)
-                  Container(
-                    color: Colors.red,
-                    height: 40,
-                    width: 40,
-                  ),
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(20),
+                        child: Image.file(
+                          File(state.profilePicture!.path),
+                          height: 80,
+                          width: 80,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
                   SizedBox(
                     height: 20.h,
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Add Profile image'),
-                          GestureDetector(
+                        GestureDetector(
                           onTap: () async {
                            final result =  await showImagePickerOptions(context);
                            if(result is Map){
@@ -122,13 +125,15 @@ class _AddRelationshipScreenState extends State<AddRelationshipScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
-                      buildFormOptionsButton('Create', onTap: () {
-                       RelationshipController(context).submitRelationship();
-                       Navigator.of(context).pop(state);
+                      buildFormOptionsButton('Create', onTap: () async {
+                        RelationshipController(context).submitRelationship();
+                        // Refresh relationships after submission
+                        context.read<RelationshipListBloc>().add(LoadRelationships());
+                        Navigator.of(context).pop(state);
                       }),
-                      buildFormOptionsButton('Cancel',onTap:(){
+                      buildFormOptionsButton('Cancel', onTap: () {
                         Navigator.of(context).pop(null);
-                      },primary: false),
+                      }, primary: false),
                     ],
                   ),
                 ],
