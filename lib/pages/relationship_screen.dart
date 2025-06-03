@@ -420,7 +420,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
         builder: (context, state) {
           if (state is! InteractionListLoaded) {
             return const Center(
-              child: Text("Failed to load interaction List"),
+              child: Text("Failed to load your interactions"),
             );
           }
           if (filteredByRelationshipId.isEmpty) {
@@ -481,7 +481,6 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                         decoration: const BoxDecoration(
                           color: Colors.red,
                           shape: BoxShape.circle,
-                          // borderRadius: BorderRadius.circular(30.h)
                         ),
                         child: const Icon(
                           Icons.delete,
