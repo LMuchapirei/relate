@@ -158,7 +158,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width,
                     height: MediaQuery.of(context).size.height * 0.8,
-                    child: const ManageRelation(),
+                    child: ManageRelation(relationshipId: relationship.id ?? ""),
                   ),
                 );
               },
@@ -239,12 +239,14 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
             },
             child: ExpansionTile(
               tilePadding: EdgeInsets.symmetric(horizontal: 16.0.h),
-              backgroundColor: Colors.white, // Background color when expanded
+              backgroundColor: Colors.white,
               collapsedBackgroundColor:
-                  Colors.white, // Background color when collapsed
+                  Colors.white,
               leading: CircleAvatar(
                 radius: 24.h,
-                backgroundImage: const AssetImage('assets/images/profile.png'),
+                backgroundImage: relationship.profileImageUrl != null && relationship.profileImageUrl!.isNotEmpty
+                    ? NetworkImage(relationship.profileImageUrl!)
+                    : const AssetImage('assets/images/profile.png') as ImageProvider,
               ),
               title: SizedBox(
                 height: 50.h,
