@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
 import 'package:relate/features/interactions/bloc/interaction_events.dart';
 import 'package:relate/features/relationship/bloc/relationship_bloc.dart';
+import 'package:relate/features/relationship/bloc/topic_bloc.dart';
 
 import '../../features/application/application_page.dart';
 import '../../features/application/bloc/app_bloc.dart';
@@ -55,7 +56,8 @@ static List<dynamic> otherProviders(BuildContext context){
     BlocProvider(create: (_)=> RelationshipListBloc()..add(LoadRelationships())),
     BlocProvider(create: (_)=> InteractionBloc()),
     BlocProvider(create: (_)=> InteractionListBloc()),
-    BlocProvider(create: (_)=> InteractionSummaryBloc(InteractionSummaryController())), // <-- Added
+    BlocProvider(create: (_)=> InteractionSummaryBloc(InteractionSummaryController())),
+    BlocProvider(create: (_)=> TopicsBloc()),
   ];
 }
 
