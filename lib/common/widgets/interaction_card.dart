@@ -11,7 +11,6 @@ import '../../pages/interaction_summary.dart';
 import '../values/enums.dart';
 import 'attachment_preview.dart';
 import 'modals.dart';
-import 'package:flutter_pdfview/flutter_pdfview.dart'; // For PDF thumbnails (optional)
 import 'package:video_thumbnail/video_thumbnail.dart'; // For video thumbnails (optional)
 import 'package:mime/mime.dart'; // For mime type detection
 import 'package:flutter_svg/flutter_svg.dart';

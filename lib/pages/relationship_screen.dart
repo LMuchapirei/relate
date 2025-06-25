@@ -113,6 +113,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               FloatingActionButton(
+                heroTag: "Two",
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(50.h))),
                 onPressed: () {
@@ -137,6 +138,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                 height: 10.h,
               ),
               FloatingActionButton(
+                heroTag: "One",
                 shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.all(Radius.circular(50.h))),
                 onPressed: () {
@@ -393,22 +395,20 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   }
 
   Widget _buildFilterTab(String title, bool isSelected) {
-    return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        width: MediaQuery.of(context).size.width * 0.4,
-        decoration: BoxDecoration(
-          color: isSelected ? Colors.grey[400] : Colors.transparent,
-          borderRadius: BorderRadius.circular(24),
-        ),
-        child: Center(
-          child: Text(
-            title,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-              color: isSelected ? Colors.black87 : Colors.black54,
-            ),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      width: MediaQuery.of(context).size.width * 0.4,
+      decoration: BoxDecoration(
+        color: isSelected ? Colors.grey[400] : Colors.transparent,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Center(
+        child: Text(
+          title,
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+            color: isSelected ? Colors.black87 : Colors.black54,
           ),
         ),
       ),

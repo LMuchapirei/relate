@@ -45,7 +45,7 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
   final InteractionSummaryController summaryControllerHelper = InteractionSummaryController();
   double moodValue = 0.0;
   List<String> notes = [];
-  List<Map<String, String>> attachments = []; // <-- Updated to hold attachment maps
+  List<Map<String, String>> attachments = [];
 
   void _addNote(BuildContext context) {
     if (noteController.text.isEmpty) {
@@ -208,13 +208,13 @@ class _InteractionSummaryScreenState extends State<InteractionSummaryScreen> {
               GestureDetector(
                 onTap: () async {
                   final result = await showFilePickerOptions(context);
-                  if(result == null) return; // User cancelled the picker
+                  if(result == null) return; 
                   final file = result["fileObject"];
                   if (file is XFile) {
                     // Upload to Appwrite and get url, name, mime
                     final fileMeta = await summaryControllerHelper.uploadFileToAppwrite(
                       file.path,
-                      '683801e4001503aecbc3', // Replace with your actual bucket ID
+                      '683801e4001503aecbc3',
                     );
                     if (fileMeta.isNotEmpty) {
                       setState(() {

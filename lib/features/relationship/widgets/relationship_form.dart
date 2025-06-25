@@ -126,7 +126,7 @@ class _AddRelationshipScreenState extends State<AddRelationshipScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: [
                       buildFormOptionsButton('Create', onTap: () async {
-                        RelationshipController(context).submitRelationship();
+                        RelationshipController().submitRelationship(context);
                         // Refresh relationships after submission
                         context.read<RelationshipListBloc>().add(LoadRelationships());
                         Navigator.of(context).pop(state);

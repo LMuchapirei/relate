@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
 import 'package:relate/features/interactions/bloc/interaction_events.dart';
+import 'package:relate/features/relationship/bloc/birthday_log_bloc.dart';
 import 'package:relate/features/relationship/bloc/relationship_bloc.dart';
 import 'package:relate/features/relationship/bloc/topic_bloc.dart';
 
@@ -58,6 +59,7 @@ static List<dynamic> otherProviders(BuildContext context){
     BlocProvider(create: (_)=> InteractionListBloc()),
     BlocProvider(create: (_)=> InteractionSummaryBloc(InteractionSummaryController())),
     BlocProvider(create: (_)=> TopicsBloc()),
+    BlocProvider(create: (_)=> BirthdayLogsBloc()),
   ];
 }
 
