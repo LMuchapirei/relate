@@ -19,7 +19,7 @@ Custom Frequency:
 
 Implement Core Features
   1. Relationship Management:
-    Use a Firestore collection to store relationship details.
+    Use a appwrite collection to store relationship details.
     Each document would store data such as:
     Name
     Contact Information
@@ -28,11 +28,11 @@ Implement Core Features
     Last contact date
 
 3. Scheduling Reminders:
-    Use DateTime and Firebase Functions or local notifications to schedule reminders.
+    Use DateTime and Appwrite Functions or local notifications to schedule reminders.
     Let the user set frequency (daily, weekly, monthly) for calls or interactions.
 
 4. Push Notifications:
-    Integrate Firebase Cloud Messaging (FCM) to send reminders.
+    Integrate Appwrite Cloud Messaging (FCM) to send reminders.
     Show a notification with options like "Call Now" or "Snooze" when the reminder time approaches.
 
 5. Post-Interaction Summary:
