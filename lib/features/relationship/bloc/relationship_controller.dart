@@ -9,11 +9,13 @@ import '../../../common/widgets/flutter_toast.dart';
 import '../models/relationship_model.dart';
 
 class RelationshipController {
-  final BuildContext context;
+  static final RelationshipController _instance = RelationshipController._internal();
 
-  const RelationshipController(this.context);
+  factory RelationshipController() => _instance;
 
-  void submitRelationship() async {
+  RelationshipController._internal();
+
+  void submitRelationship(BuildContext context) async {
     final state = context.read<RelationShipFormBlocs>().state;
     final relationship = Relationship(
       firstName: state.firstName,
@@ -23,10 +25,10 @@ class RelationshipController {
       rating: state.rating.toInt(),
       relationshipType: state.relationshipType,
     );
-    await saveRelationshipToAppwrite(relationship);
+    await saveRelationshipToAppwrite(context, relationship);
   }
 
-  Future<void> saveRelationshipToAppwrite(Relationship relationship) async {
+  Future<void> saveRelationshipToAppwrite(BuildContext context, Relationship relationship) async {
     try {
       // Use FirebaseAuth for user ID
       final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -67,7 +69,6 @@ class RelationshipController {
     try {
       final storage = Storage(Global.client);
       final file = InputFile.fromPath(path: profileImage.path);
-      // Replace with your Appwrite bucket ID
       const bucketId = '683d463300303a71871b'; //bucket for profile images
       final uploaded = await storage.createFile(
         bucketId: bucketId,
@@ -81,6 +82,31 @@ class RelationshipController {
     } on Exception catch (e) {
       toastInfo(msg: "Failed to submit profile picture.$e");
       return '';
+    }
+  }
+
+  Future<void> bookmarkRelationship(String relationshipId, {required bool bookmarked}) async {
+    try {
+      final database = Databases(Global.client);
+      const databaseId = '683d422f003d2714d076'; //db id
+      const collectionId = '683d45f700104e5e6cd1'; // relationship id
+
+      await database.updateDocument(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        documentId: relationshipId,
+        data: {
+          'bookMarked': bookmarked,
+          'bookMarkDate': DateTime.now().toIso8601String()
+        },
+      );
+      toastInfo(msg: bookmarked ? "Relationship bookmarked" : "Bookmark removed");
+    } catch (e) {
+      toastInfo(
+        msg: "Failed to update bookmark: $e",
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
     }
   }
 }

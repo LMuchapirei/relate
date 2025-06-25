@@ -9,7 +9,9 @@ class Relationship {
   final String? relationshipType;
   final String? profileImageUrl;
   final String? userId;
-  final DateTime? createdAt; // <-- Added
+  final bool? bookMarked;
+  final DateTime? createdAt;
+  final DateTime? bookMarkDate;
 
   Relationship({
     this.id,
@@ -22,6 +24,8 @@ class Relationship {
     this.relationshipType,
     this.profileImageUrl,
     this.userId,
+    this.bookMarked,
+    this.bookMarkDate,
     this.createdAt, // <-- Added
   });
 
@@ -38,7 +42,9 @@ class Relationship {
       frequency: map['frequency'],
       relationshipType: map['relationshipType'],
       profileImageUrl: map['profileImageUrl'],
+      bookMarkDate: map['bookMarkDate'] != null ? DateTime.tryParse(map['bookMarkDate']) : null ,
       userId: map['userId'],
+      bookMarked: map['bookMarked'] ?? false,
       createdAt: map['\$createdAt'] != null
           ? DateTime.tryParse(map['\$createdAt'])
           : (map['created_at'] is String
@@ -60,5 +66,21 @@ class Relationship {
       'userId': userId,
       'createdAt': createdAt?.toIso8601String(),
     };
+  }
+
+  @override
+  String toString() {
+    return {
+      'firstName': firstName,
+      'lastName': lastName,
+      'nickName': nickName,
+      'phoneNumber': phoneNumber,
+      'rating': rating,
+      'frequency': frequency,
+      'relationshipType': relationshipType,
+      'profileImageUrl': profileImageUrl,
+      'userId': userId,
+      'createdAt': createdAt?.toIso8601String(),
+    }.toString();
   }
 }
