@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
+import 'package:relate/features/relationship/bloc/relationship_controller.dart';
 import 'package:relate/features/relationship/models/relationship_model.dart';
 import 'package:relate/pages/relationship_screen.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -24,8 +25,34 @@ class RelationshipsScreen extends StatefulWidget {
 }
 
 class _RelationshipsScreenState extends State<RelationshipsScreen> {
-  List<bool> isExpandedList = List.generate(5, (index) => false);
-  
+  final _searchTextController = TextEditingController();
+  @override
+  void initState() {
+    super.initState();
+    _searchTextController.addListener(_onSearchChanged);
+  }
+
+  @override
+  void dispose() {
+    _searchTextController.removeListener(_onSearchChanged);
+    _searchTextController.dispose();
+    super.dispose();
+  }
+
+  void _onSearchChanged() {
+    setState(() {});
+  }
+
+  List<Relationship> _getFilteredRelationships(List<Relationship> all) {
+    final query = _searchTextController.text.trim().toLowerCase();
+    if (query.isEmpty) return all;
+    return all.where((r) =>
+      (r.firstName.toLowerCase().contains(query)) ||
+      (r.lastName.toLowerCase().contains(query)) ||
+      (r.relationshipType?.toLowerCase().contains(query) ?? false)
+    ).toList();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -63,9 +90,10 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
       ),
       body: BlocConsumer<RelationshipListBloc, RelationshipListState>(
         listener: (context, state) {
-          // TODO: implement listener
+  
         },
         builder: (context, state) {
+          final filteredRelationships = _getFilteredRelationships(state.relationships);
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -74,9 +102,9 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                 const SizedBox(height: 20),
                 Expanded(
                   child: ListView.builder(
-                    itemCount: state.relationships.length,//5, // Number of relationships
+                    itemCount: filteredRelationships.length,
                     itemBuilder: (context, index) {
-                      final currentRelation = state.relationships[index];
+                      final currentRelation = filteredRelationships[index];
                       return _buildRelationshipItem(currentRelation);
                     },
                   ),
@@ -84,7 +112,6 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                 const SizedBox(height: 20),
                 ElevatedButton(
                   onPressed: () async {
-                    // Navigate to Add Relationship Screen
                     displayBottomModalSheet(
                         context,
                         SizedBox(
@@ -115,8 +142,9 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
       children: [
         Expanded(
           child: TextField(
+            controller: _searchTextController,
             decoration: InputDecoration(
-              hintText: 'Eg: John Doe',
+              hintText: 'Eg: Angeline Doe',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),
@@ -139,10 +167,6 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
   }
 
   Widget _buildRelationshipItem(Relationship relationship) {
-    String date = '';
-    if (relationship.createdAt != null) {
-      date = DateFormat('dd MMM yyyy').format(relationship.createdAt!);
-    }
     return Slidable(
       startActionPane: ActionPane(
         motion: const StretchMotion(),
@@ -185,16 +209,22 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
         children: [
           Expanded(
             flex: 1,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              decoration: const BoxDecoration(
-                color: Colors.amber,
-                shape: BoxShape.circle,
-                // borderRadius: BorderRadius.circular(30.h)
-              ),
-              child: const Icon(
-                Icons.bookmark,
-                color: Colors.white,
+            child: GestureDetector(
+              onTap: () {
+                if(relationship.id != null){
+                     RelationshipController().bookmarkRelationship(relationship.id!  , bookmarked: true);
+                }
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                decoration: const BoxDecoration(
+                  color: Colors.amber,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.bookmark,
+                  color: Colors.white,
+                ),
               ),
             ),
           ),
@@ -205,7 +235,6 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
               decoration: const BoxDecoration(
                 color: Colors.red,
                 shape: BoxShape.circle,
-                // borderRadius: BorderRadius.circular(30.h)
               ),
               child: const Icon(
                 Icons.delete,
@@ -226,7 +255,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
               borderRadius: BorderRadius.circular(10.h),
             ),
             collapsedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.h),
+              borderRadius: BorderRadius.circular(10.h),
             ),
           )).copyWith(dividerColor: Colors.transparent),
           child: GestureDetector(
@@ -249,7 +278,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                     : const AssetImage('assets/images/profile.png') as ImageProvider,
               ),
               title: SizedBox(
-                height: 50.h,
+                height: 60.h,
                 child: Row(
                   children: [
                     SizedBox(width: 8.w),
@@ -259,8 +288,9 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                         children: [
                            Text(
                             "${relationship.firstName} ${relationship.lastName}",
-                            style: const TextStyle(
-                                fontSize: 10, fontWeight: FontWeight.bold),
+                            style:  TextStyle(
+                                color: Colors.grey.shade600,
+                                fontSize: 12.h, fontWeight: FontWeight.bold),
                           ),
                           Text(
                             relationship.relationshipType ?? "",
@@ -269,32 +299,26 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                               color:   Colors.green,
                             ),
                           ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: Icon(
+                              relationship.bookMarked ?? false ?  Icons.bookmark : Icons.bookmark_border_outlined,
+                              color: relationship.bookMarked ?? false ? Colors.amber : Colors.grey,
+                            ),
+                          ),
                         ],
                       ),
-                    ),
-                    Column(
-                      children: [
-                        Text(
-                          (relationship.rating ?? 0.0).toStringAsPrecision(2),
-                          style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(date, style: const TextStyle(fontSize: 12)),
-                      ],
                     ),
                   ],
                 ),
               ),
-              children: const <Widget>[
+              children:  <Widget>[
                 Padding(
-                  padding: EdgeInsets.all(16.0),
+                  padding: const  EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Interactions scheduled',
@@ -302,15 +326,16 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                           Text('10')
                         ],
                       ),
-                      SizedBox(height: 8),
+                      const SizedBox(height: 8),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text('Date Created', style: TextStyle(fontSize: 14)),
-                          Text('12 Jan 2024')
+                          /// update this to use the correct field
+                          const Text('Date Created', style: TextStyle(fontSize: 14)),
+                          Text(relationship.createdAt != null ?DateFormat('dd MMM yyyy').format(relationship.createdAt!): "N/A")
                         ],
                       ),
-                      Row(
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Next Interaction',
@@ -318,8 +343,8 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                           Text('14 Oct 2025')
                         ],
                       ),
-                      SizedBox(height: 8),
-                      Row(
+                      const SizedBox(height: 8),
+                      const Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text('Rating', style: TextStyle(fontSize: 16)),
