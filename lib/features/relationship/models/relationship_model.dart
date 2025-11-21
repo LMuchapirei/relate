@@ -7,6 +7,7 @@ class Relationship {
   final int? rating;
   final String? frequency;
   final String? relationshipType;
+  final List<String> tags; // <-- Added
   final String? profileImageUrl;
   final String? userId;
   final bool? bookMarked;
@@ -22,16 +23,25 @@ class Relationship {
     this.rating,
     this.frequency,
     this.relationshipType,
+    this.tags = const [], // <-- Added
     this.profileImageUrl,
     this.userId,
     this.bookMarked,
     this.bookMarkDate,
-    this.createdAt, // <-- Added
+    this.createdAt,
   });
 
   factory Relationship.fromMap(Map<String, dynamic> map) {
+    // Handle backward compatibility: if tags is null/empty, use relationshipType
+    List<String> parsedTags = [];
+    if (map['tags'] != null) {
+      parsedTags = List<String>.from(map['tags']);
+    } else if (map['relationshipType'] != null) {
+      parsedTags = [map['relationshipType']];
+    }
+
     return Relationship(
-      id: map['\$id'] ?? map['id'], // Appwrite uses $id for document id
+      id: map['\$id'] ?? map['id'],
       firstName: map['firstName'] ?? '',
       lastName: map['lastName'] ?? '',
       nickName: map['nickName'],
@@ -41,8 +51,11 @@ class Relationship {
           : (map['rating'] is String ? int.tryParse(map['rating']) : null),
       frequency: map['frequency'],
       relationshipType: map['relationshipType'],
+      tags: parsedTags, // <-- Added
       profileImageUrl: map['profileImageUrl'],
-      bookMarkDate: map['bookMarkDate'] != null ? DateTime.tryParse(map['bookMarkDate']) : null ,
+      bookMarkDate: map['bookMarkDate'] != null
+          ? DateTime.tryParse(map['bookMarkDate'])
+          : null,
       userId: map['userId'],
       bookMarked: map['bookMarked'] ?? false,
       createdAt: map['\$createdAt'] != null
@@ -62,6 +75,7 @@ class Relationship {
       'rating': rating,
       'frequency': frequency,
       'relationshipType': relationshipType,
+      'tags': tags, // <-- Added
       'profileImageUrl': profileImageUrl,
       'userId': userId,
       'createdAt': createdAt?.toIso8601String(),
@@ -78,6 +92,7 @@ class Relationship {
       'rating': rating,
       'frequency': frequency,
       'relationshipType': relationshipType,
+      'tags': tags,
       'profileImageUrl': profileImageUrl,
       'userId': userId,
       'createdAt': createdAt?.toIso8601String(),

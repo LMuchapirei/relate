@@ -23,7 +23,6 @@ class AddRelationshipScreen extends StatefulWidget {
 }
 
 class _AddRelationshipScreenState extends State<AddRelationshipScreen> {
-
   // TextEditingControllers for tracking text input
   final TextEditingController firstNameController = TextEditingController();
   final TextEditingController lastNameController = TextEditingController();
@@ -42,9 +41,9 @@ class _AddRelationshipScreenState extends State<AddRelationshipScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-     backgroundColor: Colors.grey[200], //
+      backgroundColor: Colors.grey[200], //
       appBar: AppBar(
-         backgroundColor: Colors.grey[200], //
+        backgroundColor: Colors.grey[200], //
         elevation: 0,
         title: Text(
           'Add Relationship',
@@ -52,101 +51,115 @@ class _AddRelationshipScreenState extends State<AddRelationshipScreen> {
         ),
         centerTitle: true,
       ),
-      body: BlocBuilder<RelationShipFormBlocs,RelationshipFormStates>(
-        builder: (context,state) {
-          double frequency = state.frequency;
-          double rating = state.rating;
-          return Padding(
-            padding:  EdgeInsets.all(16.0.h),
-            child: SingleChildScrollView(
-              scrollDirection: Axis.vertical,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  if(state.profilePicture != null)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(20),
-                        child: Image.file(
-                          File(state.profilePicture!.path),
-                          height: 80,
-                          width: 80,
-                          fit: BoxFit.cover,
-                        ),
+      body: BlocBuilder<RelationShipFormBlocs, RelationshipFormStates>(
+          builder: (context, state) {
+        // double frequency = state.frequency; // Removed
+        // double rating = state.rating; // Removed
+        return Padding(
+          padding: EdgeInsets.all(16.0.h),
+          child: SingleChildScrollView(
+            scrollDirection: Axis.vertical,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                if (state.profilePicture != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Image.file(
+                        File(state.profilePicture!.path),
+                        height: 80,
+                        width: 80,
+                        fit: BoxFit.cover,
                       ),
                     ),
-                  SizedBox(
-                    height: 20.h,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text('Add Profile image'),
-                        GestureDetector(
-                          onTap: () async {
-                           final result =  await showImagePickerOptions(context);
-                           if(result is Map){
-                            final fileObject = result['fileObject'] as XFile;
-                             context.read<RelationShipFormBlocs>().add(ProfilePictureEvent(fileObject));
-                           }
-                          },
-                         child: SvgPicture.asset("assets/images/attach.svg",height: 20.h,)),
-                      ],
-                    ),
                   ),
-                  SizedBox(height: 20.h),
-                   _buildRelationshipTypeSelector(state),
-                  SizedBox(height: 20.h),
-                  _buildSlider('Interaction Frequency',frequency,
-                      (value) {
-                        context.read<RelationShipFormBlocs>().add(FrequencyEvent(value));
-                  }),
-                  _buildSlider('Relationship Rating', rating, (value) {
-                      context.read<RelationShipFormBlocs>().add(RatingEvent(value));
-                  }),
-
-                  _buildTextInput('First Name', firstNameController,(value){
-                    context.read<RelationShipFormBlocs>().add(FirstNameEvent(value));
-                  }),
-                  SizedBox(height: 10.h),
-                  _buildTextInput('Last Name', lastNameController,(value){
-                      context.read<RelationShipFormBlocs>().add(LastNameEvent(value));
-                  }),
-                  _buildTextInput('Nick Name', nickNameController,(value){
-                      context.read<RelationShipFormBlocs>().add(NickNameEvent(value));
-                  }),
-                  SizedBox(height: 10.h),
-                  _buildTextInput('Phone Number', phoneNumberController,(value){
-                      context.read<RelationShipFormBlocs>().add(PhoneNumberEvent(value));
-                  }),
-                  SizedBox(height: 20.h),
-                 
-                  SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                SizedBox(
+                  height: 20.h,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      buildFormOptionsButton('Create', onTap: () async {
-                        RelationshipController().submitRelationship(context);
-                        // Refresh relationships after submission
-                        context.read<RelationshipListBloc>().add(LoadRelationships());
-                        Navigator.of(context).pop(state);
-                      }),
-                      buildFormOptionsButton('Cancel', onTap: () {
-                        Navigator.of(context).pop(null);
-                      }, primary: false),
+                      Text('Add Profile image'),
+                      GestureDetector(
+                          onTap: () async {
+                            final result =
+                                await showImagePickerOptions(context);
+                            if (result is Map) {
+                              final fileObject = result['fileObject'] as XFile;
+                              context
+                                  .read<RelationShipFormBlocs>()
+                                  .add(ProfilePictureEvent(fileObject));
+                            }
+                          },
+                          child: SvgPicture.asset(
+                            "assets/images/attach.svg",
+                            height: 20.h,
+                          )),
                     ],
                   ),
-                ],
-              ),
+                ),
+                SizedBox(height: 20.h),
+                _buildRelationshipTypeSelector(state),
+                SizedBox(height: 20.h),
+                _buildFrequencySelector(state.frequency, (value) {
+                  context
+                      .read<RelationShipFormBlocs>()
+                      .add(FrequencyEvent(value));
+                }),
+                _buildRatingSelector(state.rating, (value) {
+                  context.read<RelationShipFormBlocs>().add(RatingEvent(value));
+                }),
+                _buildTextInput('First Name', firstNameController, (value) {
+                  context
+                      .read<RelationShipFormBlocs>()
+                      .add(FirstNameEvent(value));
+                }),
+                SizedBox(height: 10.h),
+                _buildTextInput('Last Name', lastNameController, (value) {
+                  context
+                      .read<RelationShipFormBlocs>()
+                      .add(LastNameEvent(value));
+                }),
+                _buildTextInput('Nick Name', nickNameController, (value) {
+                  context
+                      .read<RelationShipFormBlocs>()
+                      .add(NickNameEvent(value));
+                }),
+                SizedBox(height: 10.h),
+                _buildTextInput('Phone Number', phoneNumberController, (value) {
+                  context
+                      .read<RelationShipFormBlocs>()
+                      .add(PhoneNumberEvent(value));
+                }),
+                SizedBox(height: 20.h),
+                SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    buildFormOptionsButton('Create', onTap: () async {
+                      RelationshipController().submitRelationship(context);
+                      // Refresh relationships after submission
+                      context
+                          .read<RelationshipListBloc>()
+                          .add(LoadRelationships());
+                      Navigator.of(context).pop(state);
+                    }),
+                    buildFormOptionsButton('Cancel', onTap: () {
+                      Navigator.of(context).pop(null);
+                    }, primary: false),
+                  ],
+                ),
+              ],
             ),
-          );
-        }
-      ),
+          ),
+        );
+      }),
     );
   }
 
-
-  Widget _buildTextInput(String label, TextEditingController controller,void Function(String)? onChanged) {
+  Widget _buildTextInput(String label, TextEditingController controller,
+      void Function(String)? onChanged) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -183,88 +196,167 @@ class _AddRelationshipScreenState extends State<AddRelationshipScreen> {
   }
 
   Widget _buildRelationshipTypeSelector(RelationshipFormStates state) {
-    List<Map<String, dynamic>> relationshipTags = [
-      {'label': 'Family', 'color': Colors.red},
-      {'label': 'Friendship', 'color': Colors.green},
-      {'label': 'Work', 'color': Colors.brown},
-      {'label': 'Church', 'color': Colors.purple},
-      {'label': 'Mentor', 'color': Colors.purple},
-      {'label': 'Teammate', 'color': Colors.purple},
-      /// --->
-      {'label': 'Romantic', 'color': Colors.purple},
-      {'label': 'Colleague', 'color': Colors.purple},
-      {'label': 'Acquaintance', 'color': Colors.purple},
-      {'label': 'Neighbor', 'color': Colors.purple},
-      {'label': 'Business Partner', 'color': Colors.purple},
+    final TextEditingController tagController = TextEditingController();
+    final List<String> predefinedTags = [
+      '#family',
+      '#friend',
+      '#work',
+      '#church',
+      '#mentor',
+      '#teammate',
+      '#romantic',
+      '#colleague',
+      '#acquaintance',
+      '#neighbor',
+      '#business_partner'
     ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('Relationship Type'),
+        Text('Tags (e.g. #friend, #work)'),
         SizedBox(height: 10),
-         Container(
-                padding: EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: Colors.black45,
-                  borderRadius: BorderRadius.circular(20),
+        Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: tagController,
+                decoration: InputDecoration(
+                  hintText: 'Add a tag',
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  contentPadding:
+                      EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 ),
-                child: Wrap(
-                  spacing: 8.0,
-                  runSpacing: 8.0,
-                  children: relationshipTags.map((e) => _buildChip(e['label'],state)).toList(),
-                ),
+                onSubmitted: (value) {
+                  if (value.isNotEmpty) {
+                    final tag = value.startsWith('#') ? value : '#$value';
+                    context.read<RelationShipFormBlocs>().add(AddTagEvent(tag));
+                    tagController.clear();
+                  }
+                },
               ),
+            ),
+            IconButton(
+              icon: Icon(Icons.add_circle),
+              onPressed: () {
+                if (tagController.text.isNotEmpty) {
+                  final value = tagController.text;
+                  final tag = value.startsWith('#') ? value : '#$value';
+                  context.read<RelationShipFormBlocs>().add(AddTagEvent(tag));
+                  tagController.clear();
+                }
+              },
+            ),
+          ],
+        ),
+        SizedBox(height: 10),
+        Text('Suggested Tags:',
+            style: TextStyle(fontSize: 12, color: Colors.grey)),
+        SizedBox(height: 5),
+        Wrap(
+          spacing: 8.0,
+          runSpacing: 8.0,
+          children: predefinedTags.map((tag) {
+            final isSelected = state.tags.contains(tag);
+            return FilterChip(
+              label: Text(tag),
+              selected: isSelected,
+              onSelected: (selected) {
+                if (selected) {
+                  context.read<RelationShipFormBlocs>().add(AddTagEvent(tag));
+                } else {
+                  context
+                      .read<RelationShipFormBlocs>()
+                      .add(RemoveTagEvent(tag));
+                }
+              },
+              backgroundColor: Colors.grey[300],
+              selectedColor: Colors.green[200],
+            );
+          }).toList(),
+        ),
+        SizedBox(height: 10),
+        if (state.tags.isNotEmpty) ...[
+          Text('Selected Tags:',
+              style: TextStyle(fontSize: 12, color: Colors.grey)),
+          SizedBox(height: 5),
+          Wrap(
+            spacing: 8.0,
+            runSpacing: 8.0,
+            children: state.tags
+                .map((tag) => Chip(
+                      label: Text(tag),
+                      onDeleted: () {
+                        context
+                            .read<RelationShipFormBlocs>()
+                            .add(RemoveTagEvent(tag));
+                      },
+                    ))
+                .toList(),
+          ),
+        ],
       ],
     );
   }
 
-  Widget _buildChip(String tag,RelationshipFormStates state) {
-    final isSelected = state.relationshipType == tag;
-    return ChoiceChip(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-      label: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Text(tag, style: TextStyle(color: isSelected ? Colors.black : Colors.white)),
-          if (isSelected) SizedBox(width: 6),
-
-        ],
-      ),
-      selected: isSelected,
-      onSelected: (selected) {
-        setState(() {
-         context.read<RelationShipFormBlocs>().add(RelationshipTypeEvent(tag));
-        });
-      },
-      selectedColor: Colors.green,
-      backgroundColor: Colors.black54,
-      labelStyle: TextStyle(fontWeight: FontWeight.bold),
-    );
-  }
-
-  Widget _buildSlider(String label, double value, Function(double) onChanged) {
+  Widget _buildFrequencySelector(
+      String currentFrequency, Function(String) onChanged) {
+    final List<String> frequencies = [
+      'Daily',
+      'Weekly',
+      'Monthly',
+      'Quarterly',
+      'Yearly'
+    ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label),
+        Text('Interaction Frequency'),
+        SizedBox(height: 10),
+        Wrap(
+          spacing: 8.0,
+          children: frequencies.map((freq) {
+            return ChoiceChip(
+              label: Text(freq),
+              selected: currentFrequency == freq,
+              onSelected: (selected) {
+                if (selected) {
+                  onChanged(freq);
+                }
+              },
+              selectedColor: Colors.green[200],
+              backgroundColor: Colors.grey[300],
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRatingSelector(
+      double currentRating, Function(double) onChanged) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Relationship Rating'),
+        SizedBox(height: 10),
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Low'),
-            Expanded(
-              child: Slider(
-                value: value,
-                min: 0,
-                max: 1,
-                onChanged: onChanged,
-                activeColor: Colors.red,
-                inactiveColor: Colors.grey,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(5, (index) {
+            return IconButton(
+              icon: Icon(
+                index < currentRating ? Icons.star : Icons.star_border,
+                color: Colors.amber,
+                size: 32,
               ),
-            ),
-            Text('High'),
-          ],
+              onPressed: () {
+                onChanged(index + 1.0);
+              },
+            );
+          }),
         ),
       ],
     );

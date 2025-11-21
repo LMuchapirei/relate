@@ -21,10 +21,11 @@ class RelationshipController {
     final relationship = Relationship(
       firstName: state.firstName,
       lastName: state.lastName,
-      frequency: state.frequency.toStringAsPrecision(2),
+      frequency: state.frequency, // No conversion needed
       phoneNumber: state.phoneNumber,
       rating: state.rating.toInt(),
       relationshipType: state.relationshipType,
+      tags: state.tags,
     );
     await saveRelationshipToAppwrite(context, relationship);
   }
@@ -143,6 +144,7 @@ class RelationshipController {
     required String firstName,
     required String lastName,
     required String phoneNumber,
+    List<String> tags = const [], // <-- Added
   }) async {
     try {
       final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -154,6 +156,7 @@ class RelationshipController {
         phoneNumber: phoneNumber,
         userId: userId,
         createdAt: DateTime.now(),
+        tags: tags, // <-- Added
       );
 
       final database = Databases(Global.client);

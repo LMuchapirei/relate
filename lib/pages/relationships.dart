@@ -28,6 +28,8 @@ class RelationshipsScreen extends StatefulWidget {
 
 class _RelationshipsScreenState extends State<RelationshipsScreen> {
   final _searchTextController = TextEditingController();
+  String? _selectedTag; // State for selected filter tag
+
   @override
   void initState() {
     super.initState();
@@ -47,13 +49,17 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
 
   List<Relationship> _getFilteredRelationships(List<Relationship> all) {
     final query = _searchTextController.text.trim().toLowerCase();
-    if (query.isEmpty) return all;
-    return all
-        .where((r) =>
-            (r.firstName.toLowerCase().contains(query)) ||
-            (r.lastName.toLowerCase().contains(query)) ||
-            (r.relationshipType?.toLowerCase().contains(query) ?? false))
-        .toList();
+
+    return all.where((r) {
+      final matchesQuery = query.isEmpty ||
+          (r.firstName.toLowerCase().contains(query)) ||
+          (r.lastName.toLowerCase().contains(query)) ||
+          (r.relationshipType?.toLowerCase().contains(query) ?? false);
+
+      final matchesTag = _selectedTag == null || r.tags.contains(_selectedTag);
+
+      return matchesQuery && matchesTag;
+    }).toList();
   }
 
   @override
@@ -64,7 +70,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
         backgroundColor: Colors.transparent,
         elevation: 0,
         actions: [
-          Padding(
+          const Padding(
             padding: EdgeInsets.only(right: 16.0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.end,
@@ -106,12 +112,48 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
         builder: (context, state) {
           final filteredRelationships =
               _getFilteredRelationships(state.relationships);
+
+          // Extract all unique tags
+          final allTags =
+              state.relationships.expand((r) => r.tags).toSet().toList();
+
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
                 _buildSearchBar(),
-                const SizedBox(height: 20),
+                const SizedBox(height: 10),
+                if (allTags.isNotEmpty)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        FilterChip(
+                          label: Text('All'),
+                          selected: _selectedTag == null,
+                          onSelected: (selected) {
+                            setState(() {
+                              _selectedTag = null;
+                            });
+                          },
+                        ),
+                        SizedBox(width: 8),
+                        ...allTags.map((tag) => Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: FilterChip(
+                                label: Text(tag),
+                                selected: _selectedTag == tag,
+                                onSelected: (selected) {
+                                  setState(() {
+                                    _selectedTag = selected ? tag : null;
+                                  });
+                                },
+                              ),
+                            )),
+                      ],
+                    ),
+                  ),
+                const SizedBox(height: 10),
                 Expanded(
                   child: ListView.builder(
                     itemCount: filteredRelationships.length,
@@ -352,13 +394,28 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                                 fontSize: 12.h,
                                 fontWeight: FontWeight.bold),
                           ),
-                          Text(
-                            relationship.relationshipType ?? "",
-                            style: const TextStyle(
-                              fontSize: 14,
-                              color: Colors.green,
+                          if (relationship.tags.isNotEmpty)
+                            Wrap(
+                              spacing: 4,
+                              children: relationship.tags
+                                  .map((tag) => Text(
+                                        tag,
+                                        style: const TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.green,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ))
+                                  .toList(),
+                            )
+                          else
+                            Text(
+                              relationship.relationshipType ?? "",
+                              style: const TextStyle(
+                                fontSize: 14,
+                                color: Colors.green,
+                              ),
                             ),
-                          ),
                           Align(
                             alignment: Alignment.centerRight,
                             child: Icon(

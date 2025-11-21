@@ -1,4 +1,3 @@
-
 import 'package:image_picker/image_picker.dart';
 
 abstract class RelationShipEvent {
@@ -21,7 +20,7 @@ class NickNameEvent extends RelationShipEvent {
 }
 
 class FrequencyEvent extends RelationShipEvent {
-  final double frequency;
+  final String frequency;
   const FrequencyEvent(this.frequency);
 }
 
@@ -40,11 +39,19 @@ class ProfilePictureEvent extends RelationShipEvent {
   const ProfilePictureEvent(this.file);
 }
 
-
 class RelationshipTypeEvent extends RelationShipEvent {
   final String relationShipType;
   const RelationshipTypeEvent(this.relationShipType);
 }
 
+class AddTagEvent extends RelationShipEvent {
+  final String tag;
+  const AddTagEvent(this.tag);
+}
+
+class RemoveTagEvent extends RelationShipEvent {
+  final String tag;
+  const RemoveTagEvent(this.tag);
+}
 
 class LoadRelationships extends RelationShipEvent {}
