@@ -32,7 +32,7 @@ class _SignInState extends State<SignIn> {
                     SizedBox(
                       height: 20.h,
                     ),
-                    buildThirdPartyLogin(context,{
+                     buildThirdPartyLogin(context,{
                       SocialLogin.google:(){
                         SignInController(context: context).handleSignInWithGoogle();
                       },

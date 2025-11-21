@@ -3,7 +3,7 @@ import 'package:relate/pages/dashboard.dart';
 
 Widget buildPage(int index,BuildContext context){
   List<Widget> widget =  [
-    Dashboard(),
+    const Dashboard(),
     const Center(
       child: Text('Search'),
     ),

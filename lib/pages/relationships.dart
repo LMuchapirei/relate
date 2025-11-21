@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
 import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
 import 'package:relate/features/relationship/bloc/relationship_controller.dart';
+import 'package:relate/features/relationship/bloc/relationship_event.dart';
 import 'package:relate/features/relationship/models/relationship_model.dart';
 import 'package:relate/pages/relationship_screen.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -14,6 +15,7 @@ import '../features/interactions/bloc/interaction_events.dart';
 import '../features/relationship/bloc/relationship_bloc.dart';
 import '../features/relationship/bloc/relationship_state.dart';
 import '../features/relationship/widgets/relationship_form.dart';
+import '../features/relationship/pages/contact_import_page.dart';
 
 class RelationshipsScreen extends StatefulWidget {
   static const routeName = '/relationships';
@@ -46,11 +48,12 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
   List<Relationship> _getFilteredRelationships(List<Relationship> all) {
     final query = _searchTextController.text.trim().toLowerCase();
     if (query.isEmpty) return all;
-    return all.where((r) =>
-      (r.firstName.toLowerCase().contains(query)) ||
-      (r.lastName.toLowerCase().contains(query)) ||
-      (r.relationshipType?.toLowerCase().contains(query) ?? false)
-    ).toList();
+    return all
+        .where((r) =>
+            (r.firstName.toLowerCase().contains(query)) ||
+            (r.lastName.toLowerCase().contains(query)) ||
+            (r.relationshipType?.toLowerCase().contains(query) ?? false))
+        .toList();
   }
 
   @override
@@ -60,7 +63,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        actions: const [
+        actions: [
           Padding(
             padding: EdgeInsets.only(right: 16.0),
             child: Column(
@@ -86,14 +89,23 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
               ],
             ),
           ),
+          IconButton(
+            icon: const Icon(Icons.import_contacts, color: Colors.black),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (context) => const ContactImportPage(),
+                ),
+              );
+            },
+          ),
         ],
       ),
       body: BlocConsumer<RelationshipListBloc, RelationshipListState>(
-        listener: (context, state) {
-  
-        },
+        listener: (context, state) {},
         builder: (context, state) {
-          final filteredRelationships = _getFilteredRelationships(state.relationships);
+          final filteredRelationships =
+              _getFilteredRelationships(state.relationships);
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Column(
@@ -182,7 +194,8 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                   SizedBox(
                     width: MediaQuery.of(context).size.width,
                     height: MediaQuery.of(context).size.height * 0.8,
-                    child: ManageRelation(relationshipId: relationship.id ?? ""),
+                    child:
+                        ManageRelation(relationshipId: relationship.id ?? ""),
                   ),
                 );
               },
@@ -211,12 +224,14 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
             flex: 1,
             child: GestureDetector(
               onTap: () {
-                if(relationship.id != null){
-                     RelationshipController().bookmarkRelationship(relationship.id!  , bookmarked: true);
+                if (relationship.id != null) {
+                  RelationshipController()
+                      .bookmarkRelationship(relationship.id!, bookmarked: true);
                 }
               },
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
                 decoration: const BoxDecoration(
                   color: Colors.amber,
                   shape: BoxShape.circle,
@@ -230,15 +245,57 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
           ),
           Expanded(
             flex: 1,
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              decoration: const BoxDecoration(
-                color: Colors.red,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.delete,
-                color: Colors.white,
+            child: GestureDetector(
+              onTap: () {
+                if (relationship.id != null) {
+                  showDialog(
+                    context: context,
+                    builder: (BuildContext context) {
+                      return AlertDialog(
+                        title: const Text("Delete Relationship"),
+                        content: const Text(
+                            "Are you sure you want to delete this relationship?"),
+                        actions: [
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(); // Cancel
+                            },
+                            child: const Text("Cancel"),
+                          ),
+                          TextButton(
+                            onPressed: () async {
+                              final success = await RelationshipController()
+                                  .deleteRelationship(relationship.id!);
+                              if (success) {
+                                if (mounted) {
+                                  Navigator.of(context)
+                                      .pop(); // Close the dialog
+                                  context
+                                      .read<RelationshipListBloc>()
+                                      .add(LoadRelationships());
+                                }
+                              }
+                            },
+                            child: const Text("Delete",
+                                style: TextStyle(color: Colors.red)),
+                          ),
+                        ],
+                      );
+                    },
+                  );
+                }
+              },
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+                decoration: const BoxDecoration(
+                  color: Colors.red,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.delete,
+                  color: Colors.white,
+                ),
               ),
             ),
           )
@@ -260,22 +317,24 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
           )).copyWith(dividerColor: Colors.transparent),
           child: GestureDetector(
             onTap: () {
-              context.read<InteractionListBloc>().add(LoadScheduledInteractions());
+              context
+                  .read<InteractionListBloc>()
+                  .add(LoadScheduledInteractions());
               Navigator.of(context).push(MaterialPageRoute(
-                  builder: (context) =>  RelationshipDetailsScreen(
-                    relationship:relationship
-                  )));
+                  builder: (context) =>
+                      RelationshipDetailsScreen(relationship: relationship)));
             },
             child: ExpansionTile(
               tilePadding: EdgeInsets.symmetric(horizontal: 16.0.h),
               backgroundColor: Colors.white,
-              collapsedBackgroundColor:
-                  Colors.white,
+              collapsedBackgroundColor: Colors.white,
               leading: CircleAvatar(
                 radius: 24.h,
-                backgroundImage: relationship.profileImageUrl != null && relationship.profileImageUrl!.isNotEmpty
+                backgroundImage: relationship.profileImageUrl != null &&
+                        relationship.profileImageUrl!.isNotEmpty
                     ? NetworkImage(relationship.profileImageUrl!)
-                    : const AssetImage('assets/images/profile.png') as ImageProvider,
+                    : const AssetImage('assets/images/profile.png')
+                        as ImageProvider,
               ),
               title: SizedBox(
                 height: 60.h,
@@ -286,24 +345,29 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                           Text(
+                          Text(
                             "${relationship.firstName} ${relationship.lastName}",
-                            style:  TextStyle(
+                            style: TextStyle(
                                 color: Colors.grey.shade600,
-                                fontSize: 12.h, fontWeight: FontWeight.bold),
+                                fontSize: 12.h,
+                                fontWeight: FontWeight.bold),
                           ),
                           Text(
                             relationship.relationshipType ?? "",
                             style: const TextStyle(
                               fontSize: 14,
-                              color:   Colors.green,
+                              color: Colors.green,
                             ),
                           ),
                           Align(
                             alignment: Alignment.centerRight,
                             child: Icon(
-                              relationship.bookMarked ?? false ?  Icons.bookmark : Icons.bookmark_border_outlined,
-                              color: relationship.bookMarked ?? false ? Colors.amber : Colors.grey,
+                              relationship.bookMarked ?? false
+                                  ? Icons.bookmark
+                                  : Icons.bookmark_border_outlined,
+                              color: relationship.bookMarked ?? false
+                                  ? Colors.amber
+                                  : Colors.grey,
                             ),
                           ),
                         ],
@@ -312,9 +376,9 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                   ],
                 ),
               ),
-              children:  <Widget>[
+              children: <Widget>[
                 Padding(
-                  padding: const  EdgeInsets.all(16.0),
+                  padding: const EdgeInsets.all(16.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -331,8 +395,12 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           /// update this to use the correct field
-                          const Text('Date Created', style: TextStyle(fontSize: 14)),
-                          Text(relationship.createdAt != null ?DateFormat('dd MMM yyyy').format(relationship.createdAt!): "N/A")
+                          const Text('Date Created',
+                              style: TextStyle(fontSize: 14)),
+                          Text(relationship.createdAt != null
+                              ? DateFormat('dd MMM yyyy')
+                                  .format(relationship.createdAt!)
+                              : "N/A")
                         ],
                       ),
                       const Row(

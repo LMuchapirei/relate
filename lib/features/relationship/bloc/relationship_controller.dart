@@ -9,7 +9,8 @@ import '../../../common/widgets/flutter_toast.dart';
 import '../models/relationship_model.dart';
 
 class RelationshipController {
-  static final RelationshipController _instance = RelationshipController._internal();
+  static final RelationshipController _instance =
+      RelationshipController._internal();
 
   factory RelationshipController() => _instance;
 
@@ -28,7 +29,8 @@ class RelationshipController {
     await saveRelationshipToAppwrite(context, relationship);
   }
 
-  Future<void> saveRelationshipToAppwrite(BuildContext context, Relationship relationship) async {
+  Future<void> saveRelationshipToAppwrite(
+      BuildContext context, Relationship relationship) async {
     try {
       // Use FirebaseAuth for user ID
       final userId = FirebaseAuth.instance.currentUser?.uid;
@@ -36,7 +38,8 @@ class RelationshipController {
       final state = context.read<RelationShipFormBlocs>().state;
       var profilePath = "";
       if (state.profilePicture != null) {
-        profilePath = await uploadImageToAppwrite(userId, state.profilePicture!);
+        profilePath =
+            await uploadImageToAppwrite(userId, state.profilePicture!);
       }
       final payload = {...relationship.toMap(), "profileImageUrl": profilePath};
       final database = Databases(Global.client);
@@ -57,7 +60,7 @@ class RelationshipController {
     } on Exception catch (e) {
       toastInfo(
         /// optional check if the profile image path is not empty and delete it given the relationship creation fails
-        /// 
+        ///
         msg: "Failed to create the user ${e.toString()}",
         backgroundColor: Colors.red,
         textColor: Colors.white,
@@ -65,7 +68,8 @@ class RelationshipController {
     }
   }
 
-  Future<String> uploadImageToAppwrite(String userId, XFile profileImage) async {
+  Future<String> uploadImageToAppwrite(
+      String userId, XFile profileImage) async {
     try {
       final storage = Storage(Global.client);
       final file = InputFile.fromPath(path: profileImage.path);
@@ -85,7 +89,8 @@ class RelationshipController {
     }
   }
 
-  Future<void> bookmarkRelationship(String relationshipId, {required bool bookmarked}) async {
+  Future<void> bookmarkRelationship(String relationshipId,
+      {required bool bookmarked}) async {
     try {
       final database = Databases(Global.client);
       const databaseId = '683d422f003d2714d076'; //db id
@@ -100,10 +105,71 @@ class RelationshipController {
           'bookMarkDate': DateTime.now().toIso8601String()
         },
       );
-      toastInfo(msg: bookmarked ? "Relationship bookmarked" : "Bookmark removed");
+      toastInfo(
+          msg: bookmarked ? "Relationship bookmarked" : "Bookmark removed");
     } catch (e) {
       toastInfo(
         msg: "Failed to update bookmark: $e",
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+    }
+  }
+
+  Future<bool> deleteRelationship(String relationshipId) async {
+    try {
+      final database = Databases(Global.client);
+      const databaseId = '683d422f003d2714d076'; // db id
+      const collectionId = '683d45f700104e5e6cd1'; // relationship collection id
+
+      await database.deleteDocument(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        documentId: relationshipId,
+      );
+      toastInfo(msg: "Relationship deleted successfully");
+      return true;
+    } catch (e) {
+      toastInfo(
+        msg: "Failed to delete relationship: $e",
+        backgroundColor: Colors.red,
+        textColor: Colors.white,
+      );
+      return false;
+    }
+  }
+
+  Future<void> createRelationship({
+    required String firstName,
+    required String lastName,
+    required String phoneNumber,
+  }) async {
+    try {
+      final userId = FirebaseAuth.instance.currentUser?.uid;
+      if (userId == null) throw Exception("User is not signed in");
+
+      final relationship = Relationship(
+        firstName: firstName,
+        lastName: lastName,
+        phoneNumber: phoneNumber,
+        userId: userId,
+        createdAt: DateTime.now(),
+      );
+
+      final database = Databases(Global.client);
+      const databaseId = '683d422f003d2714d076';
+      const collectionId = '683d45f700104e5e6cd1';
+
+      await database.createDocument(
+        databaseId: databaseId,
+        collectionId: collectionId,
+        documentId: ID.unique(),
+        data: relationship.toMap(),
+      );
+      toastInfo(msg: "Relationship created successfully");
+    } catch (e) {
+      toastInfo(
+        msg: "Failed to create relationship: $e",
         backgroundColor: Colors.red,
         textColor: Colors.white,
       );

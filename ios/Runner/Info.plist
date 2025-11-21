@@ -12,6 +12,18 @@
 	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+	<dict>
+		<key>CFBundleTypeRole</key>
+		<string>Editor</string>
+		<key>CFBundleURLSchemes</key>
+		<array>
+		<string>com.googleusercontent.apps.973117512401-6sfg75h2eil6gpig7nbvjgjtfkf35n5h</string>
+		</array>
+	</dict>
+	</array>
+
 	<key>CFBundleName</key>
 	<string>relate</string>
 	<key>CFBundlePackageType</key>
@@ -59,6 +71,8 @@
 	<key>NSAudioSessionUsageDescription</key>
 	<string>We need to play audio content.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-<string>This app needs access to location when open to show location names.</string>
+	<string>This app needs access to location when open to show location names.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>We need access to your contacts to import them into the app.</string>
 </dict>
 </plist>
