@@ -4,6 +4,7 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:relate/common/widgets/modals.dart';
 import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
+import 'package:relate/features/interactions/bloc/interaction_controller.dart';
 import 'package:relate/features/interactions/bloc/interaction_states.dart';
 import 'package:relate/features/relationship/models/relationship_model.dart';
 import 'package:relate/pages/schedule_interaction.dart';
@@ -80,23 +81,35 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                 if (selectedMonth != null)
                   SliverToBoxAdapter(child: _buildMonthSelectionDate()),
                 BlocConsumer<InteractionListBloc, InteractionListState>(
-                  listener: (context, state) {
-                  },
+                  listener: (context, state) {},
                   builder: (context, state) {
-                   List<Interaction> filteredByRelationshipId = [];
-                   filteredByRelationshipId = state.scheduledInteractions
-                      .where(
-                        (element) => element.relationshipId == widget.relationship.id,
-                      )
-                      .toList();
+                    List<Interaction> filteredByRelationshipId = [];
+                    filteredByRelationshipId = state.scheduledInteractions
+                        .where(
+                          (element) =>
+                              element.relationshipId ==
+                                  widget.relationship.id &&
+                              !element.completed,
+                        )
+                        .toList();
                     return SliverToBoxAdapter(
                       child: SizedBox(
                         width: MediaQuery.of(context).size.width,
-                        height: filteredByRelationshipId.isEmpty ? 100 : MediaQuery.of(context).size.height,
+                        height: filteredByRelationshipId.isEmpty
+                            ? 100
+                            : MediaQuery.of(context).size.height,
                         child: TabBarView(
                           children: [
-                            _buildLiveInteractionList(context,filteredByRelationshipId),
-                            _buildInteractionList(context),
+                            _buildLiveInteractionList(
+                                context, filteredByRelationshipId),
+                            _buildInteractionList(
+                                context,
+                                state.scheduledInteractions
+                                    .where((e) =>
+                                        e.completed &&
+                                        e.relationshipId ==
+                                            widget.relationship.id)
+                                    .toList()),
                           ],
                         ),
                       ),
@@ -249,9 +262,8 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
             interactions = "${state.scheduledInteractions.length} Interactions";
           }
           scheduled = state.scheduledInteractions
-              .map((e) =>
-                  e.selectedDate != null &&
-                  e.selectedDate!.isAfter(DateTime.now()))
+              .where((e) =>
+                  !e.completed && e.relationshipId == widget.relationship.id)
               .length;
         }
         return Container(
@@ -316,7 +328,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                       ),
                       SizedBox(height: 4.h),
                       Text(
-                        '5',
+                        '${state.scheduledInteractions.where((e) => e.completed && e.relationshipId == widget.relationship.id).length}',
                         style: TextStyle(
                             fontSize: 18.h,
                             fontWeight: FontWeight.bold,
@@ -415,7 +427,8 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
     );
   }
 
-  Widget _buildLiveInteractionList(BuildContext context,List<Interaction> filteredByRelationshipId) {
+  Widget _buildLiveInteractionList(
+      BuildContext context, List<Interaction> filteredByRelationshipId) {
     return BlocConsumer<InteractionListBloc, InteractionListState>(
         builder: (context, state) {
           if (state is! InteractionListLoaded) {
@@ -438,16 +451,22 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                   children: [
                     Expanded(
                       flex: 1,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 10),
-                        decoration: const BoxDecoration(
-                          color: Colors.green,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.edit,
-                          color: Colors.white,
+                      child: GestureDetector(
+                        onTap: () {
+                          InteractionController(context)
+                              .markAsDone(itemToRender.id ?? "", true);
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 10),
+                          decoration: const BoxDecoration(
+                            color: Colors.green,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            color: Colors.white,
+                          ),
                         ),
                       ),
                     ),
@@ -507,9 +526,16 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
         listener: (context, state) {});
   }
 
-  Widget _buildInteractionList(BuildContext context) {
+  Widget _buildInteractionList(
+      BuildContext context, List<Interaction> completedInteractions) {
+    if (completedInteractions.isEmpty) {
+      return const Center(
+        child: Text("No completed interactions"),
+      );
+    }
     return ListView(
-      children: List.generate(10, (index) {
+      children: List.generate(completedInteractions.length, (index) {
+        final itemToRender = completedInteractions[index];
         return Slidable(
           startActionPane: ActionPane(
             motion: const StretchMotion(),
@@ -573,11 +599,13 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
             ],
           ),
           child: InteractionExpansionCard(
-            title: index % 2 == 0 ? 'Outgoing Call' : 'Physical Meeting',
-            time: '15:30pm',
-            date: '12 Jan 2025',
-            app: index % 2 == 0 ? 'Phone App' : 'CDB',
-            interactionId: "",
+            title: itemToRender.title,
+            time: serializeTimeOfDay(itemToRender.selectedTime),
+            date: itemToRender.selectedDate == null
+                ? ""
+                : itemToRender.selectedDate!.dMMYYY(),
+            app: itemToRender.selectedRedirectApp,
+            interactionId: itemToRender.id ?? "",
             icon: index % 2 == 0 ? Icons.call : Icons.group,
           ),
         );

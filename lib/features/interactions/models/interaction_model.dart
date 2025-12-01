@@ -12,6 +12,7 @@ class Interaction {
   final String relationshipId;
   final DateTime? selectedDate;
   final TimeOfDay? selectedTime;
+  final bool completed;
   final String? createdAt;
 
   const Interaction({
@@ -24,12 +25,14 @@ class Interaction {
     this.selectedDate,
     this.selectedTime,
     this.selectedRedirectApp = "",
+    this.completed = false,
     this.createdAt,
   });
 
   Map<String, dynamic> toMap() {
     final selectedDateString = selectedDate?.toIso8601String();
-    final selectedTimeString = selectedTime != null ? serializeTimeOfDay(selectedTime!) : "";
+    final selectedTimeString =
+        selectedTime != null ? serializeTimeOfDay(selectedTime!) : "";
     return {
       'title': title,
       'notes': notes,
@@ -39,6 +42,7 @@ class Interaction {
       'selectedRedirectApp': selectedRedirectApp,
       'selectedDate': selectedDateString,
       'selectedTime': selectedTimeString,
+      'completed': completed,
       'createdAt': DateTime.now().toIso8601String(),
     };
   }
@@ -50,7 +54,7 @@ class Interaction {
     if (map['selectedDate'] != null && map['selectedDate'] is String) {
       selectedDate = DateTime.tryParse(map['selectedDate']);
     }
-    
+
     TimeOfDay? selectedTime;
     if (map['selectedTime'] != null && map['selectedTime'] is String) {
       final DateTime? timeDate = DateTime.tryParse(map['selectedTime']);
@@ -82,6 +86,7 @@ class Interaction {
       relationshipId: map['relationshipId'] ?? '',
       selectedDate: selectedDate,
       selectedTime: selectedTime,
+      completed: map['completed'] ?? false,
       createdAt: createdAtFormatted ?? '',
     );
   }
