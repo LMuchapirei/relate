@@ -26,7 +26,7 @@ class RelationshipDetailsScreen extends StatefulWidget {
 
 class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   DateTime? selectedMonth = DateTime.now();
-  Map<String, dynamic> _filterPeriod = {};
+  DateTime _selectedFilterDate = DateTime.now();
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -89,7 +89,14 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                           (element) =>
                               element.relationshipId ==
                                   widget.relationship.id &&
-                              !element.completed,
+                              !element.completed &&
+                              element.selectedDate != null &&
+                              element.selectedDate!.year ==
+                                  _selectedFilterDate.year &&
+                              element.selectedDate!.month ==
+                                  _selectedFilterDate.month &&
+                              element.selectedDate!.day ==
+                                  _selectedFilterDate.day,
                         )
                         .toList();
                     return SliverToBoxAdapter(
@@ -108,7 +115,14 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                                     .where((e) =>
                                         e.completed &&
                                         e.relationshipId ==
-                                            widget.relationship.id)
+                                            widget.relationship.id &&
+                                        e.selectedDate != null &&
+                                        e.selectedDate!.year ==
+                                            _selectedFilterDate.year &&
+                                        e.selectedDate!.month ==
+                                            _selectedFilterDate.month &&
+                                        e.selectedDate!.day ==
+                                            _selectedFilterDate.day)
                                     .toList()),
                           ],
                         ),
@@ -206,10 +220,16 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
             scrollDirection: Axis.horizontal,
             itemBuilder: ((context, index) {
               final date = dates[index];
+              final currentDate = DateTime(
+                  selectedMonth!.year, selectedMonth!.month, index + 1);
+              final isSelected = currentDate.year == _selectedFilterDate.year &&
+                  currentDate.month == _selectedFilterDate.month &&
+                  currentDate.day == _selectedFilterDate.day;
+
               return GestureDetector(
                 onTap: () {
                   setState(() {
-                    _filterPeriod = date;
+                    _selectedFilterDate = currentDate;
                   });
                 },
                 child: Container(
@@ -218,14 +238,27 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                   margin: EdgeInsets.all(5.h),
                   width: 60.w,
                   decoration: BoxDecoration(
-                      color: date["isToday"] ? Colors.grey : Colors.white,
+                      color: isSelected ? Colors.grey : Colors.white,
                       borderRadius: BorderRadius.circular(40.h),
-                      border: date["isToday"]
+                      border: isSelected
                           ? Border.all(color: Colors.black)
                           : Border.all(color: Colors.transparent)),
-                  child: DatePill(
-                    month: date["month"]!,
-                    date: date["date"]!,
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      DatePill(
+                        month: date["month"]!,
+                        date: date["date"]!,
+                      ),
+                      if (date["isToday"])
+                        Container(
+                          margin: EdgeInsets.only(top: 5.h),
+                          height: 5.h,
+                          width: 5.h,
+                          decoration: const BoxDecoration(
+                              color: Colors.red, shape: BoxShape.circle),
+                        )
+                    ],
                   ),
                 ),
               );
