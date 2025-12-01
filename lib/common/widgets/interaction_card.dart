@@ -1,19 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:relate/common/enties/media_type.dart';
+
 import 'package:relate/features/interactions/bloc/interaction_file_controller.dart';
 import 'package:relate/features/interactions/bloc/media_hive_item.dart';
 import 'package:relate/features/interactions/bloc/interaction_summary_controller.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:relate/features/interactions/models/interaction_summary_item.dart';
 import 'package:video_player/video_player.dart';
 import '../../pages/interaction_summary.dart';
 import '../values/enums.dart';
 import 'attachment_preview.dart';
 import 'modals.dart';
-import 'package:video_thumbnail/video_thumbnail.dart'; // For video thumbnails (optional)
-import 'package:mime/mime.dart'; // For mime type detection
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:relate/common/widgets/video_player.dart'; // For VideoPlayerView
 
 class InteractionExpansionCard extends StatefulWidget {
@@ -24,18 +20,18 @@ class InteractionExpansionCard extends StatefulWidget {
   final String date;
   final String interactionId;
 
-  const InteractionExpansionCard({
-    super.key, 
-    required this.icon,
-    required this.title,
-    required this.app, 
-    required this.date,
-    required this.time,
-    required this.interactionId
-  });
+  const InteractionExpansionCard(
+      {super.key,
+      required this.icon,
+      required this.title,
+      required this.app,
+      required this.date,
+      required this.time,
+      required this.interactionId});
 
   @override
-  State<InteractionExpansionCard> createState() => _InteractionExpansionCardState();
+  State<InteractionExpansionCard> createState() =>
+      _InteractionExpansionCardState();
 }
 
 class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
@@ -47,6 +43,7 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
     super.initState();
     _pageController = PageController();
   }
+
   @override
   void dispose() {
     super.dispose();
@@ -55,34 +52,59 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
 
   List<MediaHiveItem> _mediaList = [];
 
-
   @override
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5),
       child: Theme(
         data: ThemeData().copyWith(
-          expansionTileTheme: ExpansionTileThemeData(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10.h),
+            expansionTileTheme: ExpansionTileThemeData(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10.h),
+              ),
+              collapsedShape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(30.h),
+              ),
             ),
-            collapsedShape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30.h),
-            ),
-          ),
-          dividerColor: Colors.transparent),
+            dividerColor: Colors.transparent),
         child: ExpansionTile(
           initiallyExpanded: false,
           backgroundColor: Colors.white,
           collapsedBackgroundColor: Colors.white,
           leading: Icon(widget.icon, color: Colors.black),
           onExpansionChanged: (value) async {
-           if(value){
-            final mediaList = await InteractionFileController().getMediaItemsForInteraction(widget.interactionId);
-            setState(() {
-              _mediaList = mediaList;
-            });
-           }
+            if (value) {
+              final userId = FirebaseAuth.instance.currentUser?.uid;
+              final localMedia = await InteractionFileController()
+                  .getMediaItemsForInteraction(widget.interactionId);
+
+              List<MediaHiveItem> summaryMedia = [];
+              if (userId != null) {
+                final summaries =
+                    await InteractionSummaryController().getSummaries(
+                  userId: userId,
+                  relationshipId: widget.interactionId,
+                );
+                for (var summary in summaries) {
+                  for (var file in summary.files) {
+                    summaryMedia.add(MediaHiveItem(
+                      type: getMediaTypeFromExtension(
+                              file.name.split('.').last) ??
+                          MediaHiveType.image,
+                      content: file.url,
+                      interactionId: widget.interactionId,
+                      locationType: LocationHiveType.online,
+                      remoteUrl: file.url,
+                      syncStatus: 0,
+                    ));
+                  }
+                }
+              }
+
+              setState(() {
+                _mediaList = [...localMedia, ...summaryMedia];
+              });
+            }
           },
           title: SizedBox(
             height: 50.h,
@@ -93,7 +115,9 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                     mainAxisAlignment: MainAxisAlignment.center,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(widget.title, style: TextStyle(fontWeight: FontWeight.bold, fontSize: 10.h)),
+                      Text(widget.title,
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold, fontSize: 10.h)),
                       Text(widget.app),
                     ],
                   ),
@@ -140,7 +164,8 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                       height: 100.h,
                       child: GridView.builder(
                         scrollDirection: Axis.horizontal,
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 1,
                           mainAxisSpacing: 8,
                           crossAxisSpacing: 8,
@@ -148,26 +173,29 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                         ),
                         itemCount: _mediaList.length,
                         itemBuilder: (context, index) {
-                          final item = _mediaList[index];//
+                          final item = _mediaList[index]; //
                           return GestureDetector(
-                            onTap: () async {
-                              final result = await showModalBottomSheet(
-                                context: context,
-                                isScrollControlled: true,
-                                builder: (context) => CarouselScreen(
-                                  mediaList: _mediaList,
-                                  initialIndex: index,
-                                ),
-                              );
-                              if(result is Map && result['deletionFlag']){
-                                final mediaList = await InteractionFileController().getMediaItemsForInteraction(widget.interactionId);
-                                setState(() {
-                                  _mediaList = mediaList;
-                                });
-                              }
-                            },
-                            child: item.getPreview(context,mediaList[index].content,item)
-                          );
+                              onTap: () async {
+                                final result = await showModalBottomSheet(
+                                  context: context,
+                                  isScrollControlled: true,
+                                  builder: (context) => CarouselScreen(
+                                    mediaList: _mediaList,
+                                    initialIndex: index,
+                                  ),
+                                );
+                                if (result is Map && result['deletionFlag']) {
+                                  final mediaList =
+                                      await InteractionFileController()
+                                          .getMediaItemsForInteraction(
+                                              widget.interactionId);
+                                  setState(() {
+                                    _mediaList = mediaList;
+                                  });
+                                }
+                              },
+                              child: item.getPreview(
+                                  context, _mediaList[index].content, item));
                         },
                       ),
                     ),
@@ -180,10 +208,11 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                       children: [
                         Row(
                           children: [
-                            const Icon(Icons.meeting_room, color: Colors.black54),
+                            const Icon(Icons.meeting_room,
+                                color: Colors.black54),
                             const SizedBox(width: 8),
                             Text(
-                              widget.app,//'Physical Meeting',
+                              widget.app, //'Physical Meeting',
                               style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
@@ -206,8 +235,8 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                         Text(
-                           widget.date,
+                        Text(
+                          widget.date,
                           style: const TextStyle(
                             fontSize: 14,
                             color: Colors.black54,
@@ -220,214 +249,369 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                           onSelected: (MenuOptions result) async {
                             switch (result) {
                               case MenuOptions.edit:
-                                displayBottomModalSheetLarge(context, 
-                                  DraggableScrollableSheet(
-                                    maxChildSize: 0.9,
-                                    initialChildSize: 0.9,
-                                    builder: (context,controller) {
-                                        return InteractionSummaryScreen(
-                                        controller: controller,
-                                        interactionId: widget.interactionId,
-                                        );
-                                    }
-                                  ),isScroll: true);
+                                displayBottomModalSheetLarge(
+                                    context,
+                                    DraggableScrollableSheet(
+                                        maxChildSize: 0.9,
+                                        initialChildSize: 0.9,
+                                        builder: (context, controller) {
+                                          return InteractionSummaryScreen(
+                                            controller: controller,
+                                            interactionId: widget.interactionId,
+                                          );
+                                        }),
+                                    isScroll: true);
                                 break;
                               case MenuOptions.bookmark:
                                 print('Profile selected');
                                 break;
                               case MenuOptions.summaries:
-                              // Fetch summaries using the controller
-                              final userId = FirebaseAuth.instance.currentUser?.uid;
-                              if (userId != null) {
-                                final summaries = await InteractionSummaryController().getSummaries(
-                                  userId: userId,
-                                  relationshipId: widget.interactionId,
-                                );
-                                showModalBottomSheet(
-                                  context: context,
-                                  isScrollControlled: true,
-                                  builder: (BuildContext context) {
-                                    return Scaffold(
-                                      backgroundColor: Colors.white24,
-                                      body: Stack(
-                                        children: [
-                                          Positioned.fill(
-                                            child: Center(
-                                              child: SizedBox(
-                                                height: 0.75.sh,
-                                                width: 0.8.sw,
-                                                child: Container(
-                                                padding:  EdgeInsets.symmetric(
-                                                  horizontal: 5.h,
-                                                  vertical: 8.0,
-                                                ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.white,
-                                                  borderRadius: BorderRadius.circular(12.0),
-                                                  boxShadow: [
-                                                    BoxShadow(
-                                                      color: Colors.grey.shade300,
-                                                      blurRadius: 8,
-                                                      offset: const Offset(0, 4),
-                                                    ),
-                                                  ],
-                                                ),
-                                                child: PageView.builder(
-                                                  controller: _pageController,
-                                                  onPageChanged: (value) {
-                                                    setState(() {
-                                                      _selectedSummaryIndex = value;
-                                                    });
-                                                  },
-                                                  itemCount: summaries.length,
-                                                  itemBuilder: (context, index) {                                                    
-                                                    final item = summaries[index];
-                                                    return Column(
+                                // Fetch summaries using the controller
+                                final userId =
+                                    FirebaseAuth.instance.currentUser?.uid;
+                                if (userId != null) {
+                                  final summaries =
+                                      await InteractionSummaryController()
+                                          .getSummaries(
+                                    userId: userId,
+                                    relationshipId: widget.interactionId,
+                                  );
+                                  showModalBottomSheet(
+                                    context: context,
+                                    isScrollControlled: true,
+                                    backgroundColor: Colors.transparent,
+                                    builder: (context) {
+                                      return Container(
+                                        height: 600.h,
+                                        decoration: BoxDecoration(
+                                          color: Colors.white,
+                                          borderRadius: BorderRadius.only(
+                                            topLeft: Radius.circular(20.r),
+                                            topRight: Radius.circular(20.r),
+                                          ),
+                                        ),
+                                        child: Stack(
+                                          children: [
+                                            Padding(
+                                              padding: EdgeInsets.only(
+                                                  top: 60.h,
+                                                  left: 16.w,
+                                                  right: 16.w),
+                                              child: PageView.builder(
+                                                itemCount: summaries.length,
+                                                controller: PageController(
+                                                    initialPage: 0),
+                                                onPageChanged: (i) {
+                                                  // Optional: Update state if needed, but be careful about rebuilding
+                                                },
+                                                itemBuilder: (context, index) {
+                                                  final item = summaries[index];
+                                                  return SingleChildScrollView(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
                                                       children: [
-                                                        
-                                                        ListTile(
-                                                          title: Text(item.summary),
-                                                          subtitle: Text(
-                                                            'Notes: ${item.notes.join(", ")}\nFeeling: ${item.feeling}\nMood: ${item.mood}',
-                                                            style: const TextStyle(color: Colors.black54),
+                                                        // Header / Summary Title
+                                                        Text(
+                                                          item.summary
+                                                              .toUpperCase(),
+                                                          style: TextStyle(
+                                                            fontSize: 18.sp,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            letterSpacing: 1.2,
                                                           ),
-                                                          onTap: () {
-                                                            // Handle tap if needed
-                                                          },
                                                         ),
-                                                        // Add this section for file previews
-                                                        if (item.files.isNotEmpty)
+                                                        SizedBox(height: 16.h),
+
+                                                        // Mood and Feeling Row
+                                                        Row(
+                                                          children: [
+                                                            Container(
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                      horizontal:
+                                                                          12.w,
+                                                                      vertical:
+                                                                          6.h),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Colors
+                                                                    .blue
+                                                                    .shade50,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            20.r),
+                                                                border: Border.all(
+                                                                    color: Colors
+                                                                        .blue
+                                                                        .shade100),
+                                                              ),
+                                                              child: Row(
+                                                                children: [
+                                                                  Text("Mood: ",
+                                                                      style: TextStyle(
+                                                                          fontWeight: FontWeight
+                                                                              .bold,
+                                                                          color: Colors
+                                                                              .blue
+                                                                              .shade800)),
+                                                                  Text(
+                                                                      "${item.mood}",
+                                                                      style: TextStyle(
+                                                                          color: Colors
+                                                                              .blue
+                                                                              .shade800)),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                            SizedBox(
+                                                                width: 10.w),
+                                                            Container(
+                                                              padding: EdgeInsets
+                                                                  .symmetric(
+                                                                      horizontal:
+                                                                          12.w,
+                                                                      vertical:
+                                                                          6.h),
+                                                              decoration:
+                                                                  BoxDecoration(
+                                                                color: Colors
+                                                                    .purple
+                                                                    .shade50,
+                                                                borderRadius:
+                                                                    BorderRadius
+                                                                        .circular(
+                                                                            20.r),
+                                                                border: Border.all(
+                                                                    color: Colors
+                                                                        .purple
+                                                                        .shade100),
+                                                              ),
+                                                              child: Row(
+                                                                children: [
+                                                                  Text(
+                                                                      "Feeling: ",
+                                                                      style: TextStyle(
+                                                                          fontWeight: FontWeight
+                                                                              .bold,
+                                                                          color: Colors
+                                                                              .purple
+                                                                              .shade800)),
+                                                                  Text(
+                                                                      item
+                                                                          .feeling,
+                                                                      style: TextStyle(
+                                                                          color: Colors
+                                                                              .purple
+                                                                              .shade800)),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                        SizedBox(height: 20.h),
+
+                                                        // Notes Section
+                                                        if (item.notes
+                                                            .isNotEmpty) ...[
+                                                          Text(
+                                                            "Notes",
+                                                            style: TextStyle(
+                                                              fontSize: 14.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: Colors.grey
+                                                                  .shade700,
+                                                            ),
+                                                          ),
+                                                          SizedBox(height: 8.h),
+                                                          ...item.notes
+                                                              .map(
+                                                                  (note) =>
+                                                                      Padding(
+                                                                        padding:
+                                                                            EdgeInsets.only(bottom: 6.h),
+                                                                        child:
+                                                                            Row(
+                                                                          crossAxisAlignment:
+                                                                              CrossAxisAlignment.start,
+                                                                          children: [
+                                                                            Padding(
+                                                                              padding: EdgeInsets.only(top: 6.h),
+                                                                              child: Icon(Icons.circle, size: 6.sp, color: Colors.black54),
+                                                                            ),
+                                                                            SizedBox(width: 8.w),
+                                                                            Expanded(
+                                                                              child: Text(
+                                                                                note,
+                                                                                style: TextStyle(fontSize: 14.sp, height: 1.4),
+                                                                              ),
+                                                                            ),
+                                                                          ],
+                                                                        ),
+                                                                      )),
                                                           SizedBox(
-                                                            height: 500.h, // Adjust height as needed
-                                                            child: ListView.builder(
-                                                              shrinkWrap: true,
-                                                              scrollDirection: Axis.vertical,
-                                                              itemCount: item.files.length,
-                                                              itemBuilder: (context, fileIndex) {
-                                                                final attachment = item.files[fileIndex];
-                                                                final fileUrl = attachment.url;
-                                                                final mimeType = attachment.mime;
-                                                                if (mimeType.startsWith('image/')) {
-                                                                  // Show image
-                                                                  return Padding(
-                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                                                    child: ClipRRect(
-                                                                      borderRadius: BorderRadius.circular(8.0),
-                                                                      child: Image.network(
+                                                              height: 20.h),
+                                                        ],
+
+                                                        // Media Section
+                                                        if (item.files
+                                                            .isNotEmpty) ...[
+                                                          Text(
+                                                            "Attachments",
+                                                            style: TextStyle(
+                                                              fontSize: 14.sp,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color: Colors.grey
+                                                                  .shade700,
+                                                            ),
+                                                          ),
+                                                          SizedBox(
+                                                              height: 10.h),
+                                                          SizedBox(
+                                                            height: 200.h,
+                                                            child: ListView
+                                                                .separated(
+                                                              scrollDirection:
+                                                                  Axis.horizontal,
+                                                              itemCount: item
+                                                                  .files.length,
+                                                              separatorBuilder:
+                                                                  (context,
+                                                                          index) =>
+                                                                      SizedBox(
+                                                                          width:
+                                                                              10.w),
+                                                              itemBuilder:
+                                                                  (context,
+                                                                      fileIndex) {
+                                                                final attachment =
+                                                                    item.files[
+                                                                        fileIndex];
+                                                                final fileUrl =
+                                                                    attachment
+                                                                        .url;
+                                                                final mimeType =
+                                                                    attachment
+                                                                        .mime;
+
+                                                                Widget content;
+                                                                if (mimeType
+                                                                    .startsWith(
+                                                                        'image/')) {
+                                                                  content = Image
+                                                                      .network(
+                                                                    fileUrl,
+                                                                    fit: BoxFit
+                                                                        .cover,
+                                                                    width: double
+                                                                        .infinity,
+                                                                    height: double
+                                                                        .infinity,
+                                                                    errorBuilder: (context,
+                                                                            error,
+                                                                            stackTrace) =>
+                                                                        const Icon(
+                                                                            Icons.broken_image),
+                                                                  );
+                                                                } else if (mimeType
+                                                                    .startsWith(
+                                                                        'video/')) {
+                                                                  content =
+                                                                      VideoPlayerView(
+                                                                    url:
                                                                         fileUrl,
-                                                                        fit: BoxFit.cover,
-                                                                        height: 180,
-                                                                        width: double.infinity,
-                                                                        errorBuilder: (context, error, stackTrace) => const Icon(Icons.broken_image),
-                                                                      ),
-                                                                    ),
+                                                                    dataSourceType:
+                                                                        DataSourceType
+                                                                            .network,
                                                                   );
-                                                                } else if (mimeType.startsWith('video/')) {
-                                                                  // Show video using VideoPlayerView
-                                                                  return Padding(
-                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                                                    child: SizedBox(
-                                                                      height: 180,
-                                                                      child: VideoPlayerView(
-                                                                        url: fileUrl,
-                                                                        dataSourceType: DataSourceType.network,
-                                                                      ),
-                                                                    ),
-                                                                  );
-                                                                } else if (mimeType == 'application/pdf') {
-                                                                  // Skip PDF for now
-                                                                  return const SizedBox.shrink();
-                                                                } else if (mimeType.startsWith('audio/')) {
-                                                                  // Show audio icon
-                                                                  return Padding(
-                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                                                    child: ListTile(
-                                                                      leading: Icon(Icons.audiotrack, color: Colors.blue, size: 40),
-                                                                      title: Text(fileUrl.split('/').last.split('?').first),
-                                                                      subtitle: const Text('Audio file'),
-                                                                    ),
-                                                                  );
+                                                                } else if (mimeType
+                                                                    .startsWith(
+                                                                        'audio/')) {
+                                                                  content = Center(
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .audiotrack,
+                                                                          color: Colors
+                                                                              .blue,
+                                                                          size:
+                                                                              40));
                                                                 } else {
-                                                                  // Generic file
-                                                                  return Padding(
-                                                                    padding: const EdgeInsets.symmetric(vertical: 8.0),
-                                                                    child: ListTile(
-                                                                      leading: Icon(Icons.insert_drive_file, color: Colors.grey, size: 40),
-                                                                      title: Text(fileUrl.split('/').last.split('?').first),
-                                                                      subtitle: const Text('File'),
-                                                                    ),
-                                                                  );
+                                                                  content = Center(
+                                                                      child: Icon(
+                                                                          Icons
+                                                                              .insert_drive_file,
+                                                                          color: Colors
+                                                                              .grey,
+                                                                          size:
+                                                                              40));
                                                                 }
+
+                                                                return Container(
+                                                                  width: 200.w,
+                                                                  decoration:
+                                                                      BoxDecoration(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            12.r),
+                                                                    border: Border.all(
+                                                                        color: Colors
+                                                                            .grey
+                                                                            .shade200),
+                                                                  ),
+                                                                  child:
+                                                                      ClipRRect(
+                                                                    borderRadius:
+                                                                        BorderRadius.circular(
+                                                                            12.r),
+                                                                    child:
+                                                                        content,
+                                                                  ),
+                                                                );
                                                               },
                                                             ),
                                                           ),
+                                                        ],
                                                       ],
-                                                    );
-                                                  },
-                                              ),
+                                                    ),
+                                                  );
+                                                },
                                               ),
                                             ),
-                                          ),),
-                                           Positioned(
-                                              top: 40,
-                                              right: 0,
-                                              left: 0,
-                                              child: Padding(
-                                                padding: EdgeInsets.symmetric(
-                                                  horizontal: 10.w
-                                                ),
-                                                child: Row(
-                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                                  children: [
-                                                    GestureDetector(
-                                                    onTap: () {
-                                                      Navigator.of(context).pop();
-                                                    },
-                                                    child: Text("Close",style: TextStyle(
-                                                      fontSize: 12.h
-                                                    ),)
-                                                    ),
-                                                    IconButton(
-                                                    icon: Icon(Icons.delete_rounded, color: Colors.black,size: 20.h,),
-                                                    onPressed: () async  {
-                                                      final result = await InteractionSummaryController().deleteSummary(
-                                                        userId: userId,
-                                                        relationshipId: widget.interactionId,
-                                                        summaryId: summaries[_selectedSummaryIndex].id
-                                                      );
-                                                      if(result){
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          const SnackBar(content: Text("Summary deleted successfully"))
-                                                        );
-                                                        Navigator.of(context).pop();
-                                                      } else {
-                                                        ScaffoldMessenger.of(context).showSnackBar(
-                                                          const SnackBar(content: Text("Failed to delete summary"))
-                                                        );
-                                                      }
-                                                    },
-                                                  ),
-                                                  ],
-                                                ),
-                                              ))
-                                        ],
-                                      )
-                                    );
-                                  },
-                                );
-                              } else {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text("User not logged in"))
-                                );
-                              }
-                              break;
+                                            Positioned(
+                                              top: 16.h,
+                                              right: 16.w,
+                                              child: IconButton(
+                                                icon: Icon(Icons.close),
+                                                onPressed: () =>
+                                                    Navigator.pop(context),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+                                    },
+                                  );
+                                } else {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                          content: Text("User not logged in")));
+                                }
+                                break;
                               case MenuOptions.share:
                                 break;
                               case MenuOptions.delete:
                                 break;
                             }
                           },
-                          itemBuilder: (BuildContext context) => <PopupMenuEntry<MenuOptions>>[
+                          itemBuilder: (BuildContext context) =>
+                              <PopupMenuEntry<MenuOptions>>[
                             const PopupMenuItem<MenuOptions>(
                               value: MenuOptions.edit,
                               child: ListTile(
@@ -478,67 +662,60 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
   }
 }
 
-
 //// Extracted to a new screen that uses an Expansion List Tile
-  Widget _buildInteractionItem(
-      BuildContext context,
-      {required String title,
-      required String time,
-      required String date,
-      required String app,
-      required IconData icon,
-      required bool isExpanded
-      }) {
-      return GestureDetector(
-        onTap: () {
-          // Fix this and show
-          // displayBottomModalSheetLarge(context, 
-          // DraggableScrollableSheet(
-          //   maxChildSize: 0.9,
-          //   initialChildSize: 0.9,
-          //   builder: (context,controller) {
-          //     return InteractionSummaryScreen(controller: controller,);
-          //   }
-          // ),isScroll: true);
-        },
-        child:
-         Container(
-          height: 50.h,
-          width: MediaQuery.of(context).size.width,
-          margin: EdgeInsets.all(10.h),
-          decoration: BoxDecoration(
-            color: Color(0xFFFFFFFF),
-            borderRadius: BorderRadius.circular(20.h)
+Widget _buildInteractionItem(BuildContext context,
+    {required String title,
+    required String time,
+    required String date,
+    required String app,
+    required IconData icon,
+    required bool isExpanded}) {
+  return GestureDetector(
+    onTap: () {
+      // Fix this and show
+      // displayBottomModalSheetLarge(context,
+      // DraggableScrollableSheet(
+      //   maxChildSize: 0.9,
+      //   initialChildSize: 0.9,
+      //   builder: (context,controller) {
+      //     return InteractionSummaryScreen(controller: controller,);
+      //   }
+      // ),isScroll: true);
+    },
+    child: Container(
+      height: 50.h,
+      width: MediaQuery.of(context).size.width,
+      margin: EdgeInsets.all(10.h),
+      decoration: BoxDecoration(
+          color: Color(0xFFFFFFFF), borderRadius: BorderRadius.circular(20.h)),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 20.w,
           ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 20.w,
-              ),
-              Icon(icon, color: Colors.black),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(app),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                   Text(time),
-                   const SizedBox(height: 4),
-                   Text(date, style: const TextStyle(color: Colors.grey)),
-                  ],
-                ),
-              )
-            ],
+          Icon(icon, color: Colors.black),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(title,
+                    style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(app),
+              ],
+            ),
           ),
-        ),
-      );
-  }
-
-
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(time),
+                const SizedBox(height: 4),
+                Text(date, style: const TextStyle(color: Colors.grey)),
+              ],
+            ),
+          )
+        ],
+      ),
+    ),
+  );
+}

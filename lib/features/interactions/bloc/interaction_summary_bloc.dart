@@ -3,10 +3,12 @@ import 'interaction_summary_events.dart';
 import 'interaction_summary_state.dart';
 import 'interaction_summary_controller.dart';
 
-class InteractionSummaryBloc extends Bloc<InteractionSummaryEvent, InteractionSummaryState> {
+class InteractionSummaryBloc
+    extends Bloc<InteractionSummaryEvent, InteractionSummaryState> {
   final InteractionSummaryController controller;
 
-  InteractionSummaryBloc(this.controller) : super(const InteractionSummaryState()) {
+  InteractionSummaryBloc(this.controller)
+      : super(const InteractionSummaryState()) {
     on<UpdateNotesEvent>((event, emit) {
       emit(state.copyWith(notes: event.notes));
     });
@@ -22,19 +24,18 @@ class InteractionSummaryBloc extends Bloc<InteractionSummaryEvent, InteractionSu
     on<SaveSummaryEvent>((event, emit) async {
       emit(state.copyWith(isSaving: true, saveSuccess: false, error: null));
       try {
-         controller.saveSummary(
-          userId: event.userId,
-          relationshipId: event.relationshipId,
-          notes: event.notes,
-          summary: event.summary,
-          feeling: event.feeling,
-          mood: event.mood,
-          attachments: event.attachments
-        ).then((_){
-            emit(state.copyWith(isSaving: false, saveSuccess: true));
-        });
+        await controller.saveSummary(
+            userId: event.userId,
+            relationshipId: event.relationshipId,
+            notes: event.notes,
+            summary: event.summary,
+            feeling: event.feeling,
+            mood: event.mood,
+            attachments: event.attachments);
+        emit(state.copyWith(isSaving: false, saveSuccess: true));
       } catch (e) {
-        emit(state.copyWith(isSaving: false, saveSuccess: false, error: e.toString()));
+        emit(state.copyWith(
+            isSaving: false, saveSuccess: false, error: e.toString()));
       }
     });
   }
