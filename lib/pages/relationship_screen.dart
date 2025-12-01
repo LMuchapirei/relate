@@ -27,6 +27,7 @@ class RelationshipDetailsScreen extends StatefulWidget {
 class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   DateTime? selectedMonth = DateTime.now();
   DateTime _selectedFilterDate = DateTime.now();
+  bool _isDateFilterEnabled = true;
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -43,7 +44,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                 ],
                 pinned: true,
                 floating: false,
-                expandedHeight: 200.h,
+                expandedHeight: 230.h,
                 automaticallyImplyLeading: true,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Flex(
@@ -52,11 +53,12 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                     children: [
                       Padding(
                         padding: EdgeInsets.symmetric(
-                          horizontal: 4.w,
+                          horizontal: 20.w,
                         ),
                         child: _buildInteractionCard(
                             widget.relationship.relationshipType ?? ""),
-                      )
+                      ),
+                      SizedBox(height: 20.h),
                     ],
                   ),
                 ),
@@ -78,7 +80,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
               slivers: [
                 SliverToBoxAdapter(
                     child: _buildInteractionSummaryHeader(context)),
-                if (selectedMonth != null)
+                if (selectedMonth != null && _isDateFilterEnabled)
                   SliverToBoxAdapter(child: _buildMonthSelectionDate()),
                 BlocConsumer<InteractionListBloc, InteractionListState>(
                   listener: (context, state) {},
@@ -90,13 +92,14 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                               element.relationshipId ==
                                   widget.relationship.id &&
                               !element.completed &&
-                              element.selectedDate != null &&
-                              element.selectedDate!.year ==
-                                  _selectedFilterDate.year &&
-                              element.selectedDate!.month ==
-                                  _selectedFilterDate.month &&
-                              element.selectedDate!.day ==
-                                  _selectedFilterDate.day,
+                              (!_isDateFilterEnabled ||
+                                  (element.selectedDate != null &&
+                                      element.selectedDate!.year ==
+                                          _selectedFilterDate.year &&
+                                      element.selectedDate!.month ==
+                                          _selectedFilterDate.month &&
+                                      element.selectedDate!.day ==
+                                          _selectedFilterDate.day)),
                         )
                         .toList();
                     return SliverToBoxAdapter(
@@ -116,13 +119,14 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                                         e.completed &&
                                         e.relationshipId ==
                                             widget.relationship.id &&
-                                        e.selectedDate != null &&
-                                        e.selectedDate!.year ==
-                                            _selectedFilterDate.year &&
-                                        e.selectedDate!.month ==
-                                            _selectedFilterDate.month &&
-                                        e.selectedDate!.day ==
-                                            _selectedFilterDate.day)
+                                        (!_isDateFilterEnabled ||
+                                            (e.selectedDate != null &&
+                                                e.selectedDate!.year ==
+                                                    _selectedFilterDate.year &&
+                                                e.selectedDate!.month ==
+                                                    _selectedFilterDate.month &&
+                                                e.selectedDate!.day ==
+                                                    _selectedFilterDate.day)))
                                     .toList()),
                           ],
                         ),
@@ -290,53 +294,97 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
       builder: (context, state) {
         var interactions = "No Interactions";
         var scheduled = 0;
+        int healthStatus = 0; // 0: Red, 1: Yellow, 2: Green
+
         if (state is InteractionListLoaded) {
           if (state.scheduledInteractions.isNotEmpty) {
             interactions = "${state.scheduledInteractions.length} Interactions";
+            healthStatus = _calculateHealthScore(
+                state.scheduledInteractions, widget.relationship.frequency);
           }
           scheduled = state.scheduledInteractions
               .where((e) =>
-                  !e.completed && e.relationshipId == widget.relationship.id)
+                  e.completed == false &&
+                  e.selectedDate != null &&
+                  e.selectedDate!.isAfter(DateTime.now()))
               .length;
         }
+
+        Color healthColor;
+        String healthText;
+        switch (healthStatus) {
+          case 2:
+            healthColor = Colors.green;
+            healthText = "Great";
+            break;
+          case 1:
+            healthColor = Colors.orange;
+            healthText = "Okay";
+            break;
+          case 0:
+          default:
+            healthColor = Colors.red;
+            healthText = "Critical";
+            break;
+        }
+
         return Container(
+          padding: EdgeInsets.all(16.h),
           decoration: BoxDecoration(
-              color: const Color(0xFFFFFFFF),
-              borderRadius: BorderRadius.circular(20)),
-          padding: const EdgeInsets.all(16.0),
-          margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 20),
+              color: Colors.white, borderRadius: BorderRadius.circular(20.r)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                interactions,
-                style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                'with ${widget.relationship.firstName}',
-                style: TextStyle(
-                    fontSize: 20.sp,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87),
-              ),
-              const SizedBox(height: 5),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.event, color: Colors.black),
-                          Text(
-                            'Scheduled',
-                            style:
-                                TextStyle(fontSize: 14.sp, color: Colors.grey),
-                          ),
-                        ],
+                      Text(
+                        relationshipType,
+                        style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.grey),
                       ),
-                      SizedBox(height: 4.h),
+                      SizedBox(
+                        height: 5.h,
+                      ),
+                      Text(
+                        interactions,
+                        style: TextStyle(
+                            fontSize: 20.sp, fontWeight: FontWeight.bold),
+                      ),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      Icon(
+                        Icons.local_florist, // Plant icon
+                        color: healthColor,
+                        size: 30.sp,
+                      ),
+                      Text(
+                        healthText,
+                        style: TextStyle(
+                            color: healthColor,
+                            fontSize: 12.sp,
+                            fontWeight: FontWeight.bold),
+                      )
+                    ],
+                  )
+                ],
+              ),
+              SizedBox(
+                height: 20.h,
+              ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
                         '$scheduled',
                         style: TextStyle(
@@ -344,39 +392,35 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
                             fontWeight: FontWeight.bold,
                             color: Colors.red),
                       ),
+                      Text(
+                        'Scheduled',
+                        style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey),
+                      ),
                     ],
                   ),
                   Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
-                        children: [
-                          const Icon(Icons.event_available,
-                              color: Colors.black),
-                          Text(
-                            'Done',
-                            style:
-                                TextStyle(fontSize: 14.sp, color: Colors.grey),
-                          ),
-                        ],
-                      ),
-                      SizedBox(height: 4.h),
                       Text(
-                        '${state.scheduledInteractions.where((e) => e.completed && e.relationshipId == widget.relationship.id).length}',
+                        '${state is InteractionListLoaded ? state.scheduledInteractions.where((i) => i.completed == true && i.relationshipId == widget.relationship.id).length : 0}',
                         style: TextStyle(
                             fontSize: 18.h,
                             fontWeight: FontWeight.bold,
                             color: Colors.red),
                       ),
+                      Text(
+                        'Done',
+                        style: TextStyle(
+                            fontSize: 14.sp,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.grey),
+                      ),
                     ],
                   ),
                 ],
-              ),
-              const SizedBox(height: 16),
-              Center(
-                child: Text(
-                  relationshipType,
-                  style: TextStyle(fontSize: 14.sp, color: Colors.grey),
-                ),
               ),
             ],
           ),
@@ -429,11 +473,25 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
             ),
           ],
         ),
-        IconButton(
-          onPressed: () {
-            _showMonthYearPicker(context);
-          },
-          icon: const Icon(Icons.calendar_today, color: Colors.grey),
+        Row(
+          children: [
+            Switch(
+              value: _isDateFilterEnabled,
+              onChanged: (value) {
+                setState(() {
+                  _isDateFilterEnabled = value;
+                });
+              },
+              activeColor: Colors.black,
+            ),
+            if (_isDateFilterEnabled)
+              IconButton(
+                onPressed: () {
+                  _showMonthYearPicker(context);
+                },
+                icon: const Icon(Icons.calendar_today, color: Colors.grey),
+              ),
+          ],
         ),
       ],
     );
@@ -644,6 +702,53 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
         );
       }),
     );
+  }
+
+  int _getIntervalInDays(String? frequency) {
+    switch (frequency) {
+      case 'Daily':
+        return 1;
+      case 'Weekly':
+        return 7;
+      case 'Monthly':
+        return 30;
+      case 'Quarterly':
+        return 90;
+      case 'Yearly':
+        return 365;
+      default:
+        return 7; // Default to weekly if unknown
+    }
+  }
+
+  // Returns 0 for Red, 1 for Yellow, 2 for Green
+  int _calculateHealthScore(List<Interaction> interactions, String? frequency) {
+    final completedInteractions =
+        interactions.where((i) => i.completed == true).toList();
+
+    if (completedInteractions.isEmpty) {
+      return 0; // No interactions -> Critical
+    }
+
+    // Sort by date descending (newest first)
+    completedInteractions.sort((a, b) {
+      if (a.selectedDate == null || b.selectedDate == null) return 0;
+      return b.selectedDate!.compareTo(a.selectedDate!);
+    });
+
+    final lastInteractionDate = completedInteractions.first.selectedDate;
+    if (lastInteractionDate == null) return 0;
+
+    final daysElapsed = DateTime.now().difference(lastInteractionDate).inDays;
+    final interval = _getIntervalInDays(frequency);
+
+    if (daysElapsed <= interval) {
+      return 2; // Green (Healthy)
+    } else if (daysElapsed <= 2 * interval) {
+      return 1; // Yellow (Warning)
+    } else {
+      return 0; // Red (Critical)
+    }
   }
 }
 
