@@ -87,10 +87,21 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                 );
                 for (var summary in summaries) {
                   for (var file in summary.files) {
-                    summaryMedia.add(MediaHiveItem(
-                      type: getMediaTypeFromExtension(
+                    MediaHiveType mediaType;
+                    if (file.mime == 'application/pdf') {
+                      mediaType = MediaHiveType.pdf;
+                    } else if (file.mime.startsWith('video/')) {
+                      mediaType = MediaHiveType.video;
+                    } else if (file.mime.startsWith('audio/')) {
+                      mediaType = MediaHiveType.voice;
+                    } else {
+                      mediaType = getMediaTypeFromExtension(
                               file.name.split('.').last) ??
-                          MediaHiveType.image,
+                          MediaHiveType.image;
+                    }
+
+                    summaryMedia.add(MediaHiveItem(
+                      type: mediaType,
                       content: file.url,
                       interactionId: widget.interactionId,
                       locationType: LocationHiveType.online,
