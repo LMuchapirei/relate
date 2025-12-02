@@ -16,6 +16,8 @@ import 'package:rxdart/rxdart.dart';
 // import 'package:relate/common/widgets/video_preview.dart'; find a fix for this
 import 'package:video_player/video_player.dart';
 
+import 'package:relate/common/widgets/pdf_viewer_page.dart';
+
 part 'media_hive_item.g.dart';
 // part 'package:relate/features/interactions/bloc/media_hive_item.g.dart'
 
@@ -222,7 +224,11 @@ extension CarouselMedia on MediaHiveItem {
         return VideoPlayerView(
             url: item.content, dataSourceType: DataSourceType.file);
       case MediaHiveType.pdf:
-        return Placeholder();
+        final isRemote = item.content.startsWith('http');
+        return PDFViewerWidget(
+          url: isRemote ? item.content : null,
+          filePath: isRemote ? null : item.content,
+        );
       case MediaHiveType.location:
         final coordinates = content.split(',');
         final latitude = double.parse(coordinates[0]);
