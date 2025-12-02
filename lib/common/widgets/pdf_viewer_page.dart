@@ -73,7 +73,7 @@ class _PDFViewerWidgetState extends State<PDFViewerWidget> {
             : PDFView(
                 filePath: localPath,
                 enableSwipe: true,
-                swipeHorizontal: true,
+                swipeHorizontal: false,
                 autoSpacing: false,
                 pageFling: false,
                 onError: (error) {

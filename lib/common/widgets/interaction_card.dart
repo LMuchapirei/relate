@@ -253,7 +253,6 @@ class _InteractionExpansionCardState extends State<InteractionExpansionCard> {
                             color: Colors.black54,
                           ),
                         ),
-                        // Icon(Icons.more_horiz, color: Colors.black54, size: 18),
                         PopupMenuButton<MenuOptions>(
                           icon: const Icon(Icons.more_horiz),
                           color: Colors.white,
