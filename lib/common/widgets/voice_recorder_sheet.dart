@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
 class VoiceRecorderSheet extends StatefulWidget {
@@ -24,19 +23,6 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
   void initState() {
     super.initState();
     _audioRecorder = AudioRecorder();
-    _initRecorder();
-  }
-
-  Future<void> _initRecorder() async {
-    final status = await Permission.microphone.request();
-    if (status != PermissionStatus.granted) {
-      if (mounted) {
-        Navigator.of(context).pop();
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Microphone permission required')),
-        );
-      }
-    }
   }
 
   Future<void> _startRecording() async {

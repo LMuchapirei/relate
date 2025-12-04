@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:relate/common/widgets/voice_recorder_sheet.dart';
 
 final ImagePicker _imagePicker = ImagePicker();
@@ -160,6 +161,36 @@ Future<dynamic> showFilePickerOptions(BuildContext context) {
               leading: const Icon(Icons.mic),
               title: const Text('Record Voice Note'),
               onTap: () async {
+                final status = await Permission.microphone.request();
+                if (status != PermissionStatus.granted) {
+                  if (context.mounted) {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text('Permission Required'),
+                        content: const Text(
+                            'Microphone permission is required to record voice notes. Please enable it in settings.'),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              openAppSettings();
+                            },
+                            child: const Text('Settings'),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+                  return;
+                }
+
+                if (!context.mounted) return;
+
                 final result = await showModalBottomSheet(
                   context: context,
                   backgroundColor: Colors.transparent,
@@ -167,7 +198,7 @@ Future<dynamic> showFilePickerOptions(BuildContext context) {
                   builder: (context) => const VoiceRecorderSheet(),
                 );
 
-                if (result != null) {
+                if (result != null && context.mounted) {
                   Navigator.of(context).pop(result);
                 }
               },
