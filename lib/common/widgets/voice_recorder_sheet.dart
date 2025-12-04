@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
 
 class VoiceRecorderSheet extends StatefulWidget {
   const VoiceRecorderSheet({super.key});
@@ -14,7 +14,7 @@ class VoiceRecorderSheet extends StatefulWidget {
 }
 
 class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
-  late final AudioRecorder _audioRecorder;
+  late final RecorderController _recorderController;
   bool _isRecording = false;
   int _recordDuration = 0;
   Timer? _timer;
@@ -22,25 +22,23 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
   @override
   void initState() {
     super.initState();
-    _audioRecorder = AudioRecorder();
+    _recorderController = RecorderController();
   }
 
   Future<void> _startRecording() async {
     try {
-      if (await _audioRecorder.hasPermission()) {
-        final dir = await getApplicationDocumentsDirectory();
-        final path =
-            '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
+      final dir = await getApplicationDocumentsDirectory();
+      final path =
+          '${dir.path}/audio_${DateTime.now().millisecondsSinceEpoch}.m4a';
 
-        await _audioRecorder.start(const RecordConfig(), path: path);
+      await _recorderController.record(path: path);
 
-        setState(() {
-          _isRecording = true;
-          _recordDuration = 0;
-        });
+      setState(() {
+        _isRecording = true;
+        _recordDuration = 0;
+      });
 
-        _startTimer();
-      }
+      _startTimer();
     } catch (e) {
       debugPrint('Error starting recording: $e');
     }
@@ -48,7 +46,7 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
 
   Future<void> _stopRecording() async {
     try {
-      final path = await _audioRecorder.stop();
+      final path = await _recorderController.stop();
       _stopTimer();
       setState(() {
         _isRecording = false;
@@ -83,7 +81,7 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
   @override
   void dispose() {
     _timer?.cancel();
-    _audioRecorder.dispose();
+    _recorderController.dispose();
     super.dispose();
   }
 
@@ -91,6 +89,7 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
   Widget build(BuildContext context) {
     return Container(
       padding: EdgeInsets.all(24.h),
+      width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
@@ -106,14 +105,41 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
             ),
           ),
           SizedBox(height: 20.h),
-          Text(
-            _formatDuration(_recordDuration),
-            style: TextStyle(
-              fontSize: 48.sp,
-              fontWeight: FontWeight.w300,
-              fontFeatures: const [FontFeature.tabularFigures()],
+          if (_isRecording)
+            AudioWaveforms(
+              enableGesture: true,
+              size: Size(double.infinity, 60.h),
+              recorderController: _recorderController,
+              waveStyle: const WaveStyle(
+                waveColor: Colors.red,
+                extendWaveform: true,
+                showMiddleLine: false,
+              ),
+            )
+          else
+            SizedBox(
+              height: 60.h,
+              child: Center(
+                child: Text(
+                  _formatDuration(_recordDuration),
+                  style: TextStyle(
+                    fontSize: 48.sp,
+                    fontWeight: FontWeight.w300,
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                  ),
+                ),
+              ),
             ),
-          ),
+          if (_isRecording) SizedBox(height: 10.h),
+          if (_isRecording)
+            Text(
+              _formatDuration(_recordDuration),
+              style: TextStyle(
+                fontSize: 16.sp,
+                fontWeight: FontWeight.w300,
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
           SizedBox(height: 30.h),
           GestureDetector(
             onTap: _isRecording ? _stopRecording : _startRecording,
@@ -122,7 +148,7 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
               height: 70.h,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _isRecording ? Colors.red : Colors.red,
+                color: Colors.red,
                 boxShadow: [
                   BoxShadow(
                     color: Colors.red.withOpacity(0.3),
