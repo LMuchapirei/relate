@@ -11,6 +11,7 @@ import 'package:relate/pages/schedule_interaction.dart';
 import '../common/utils.dart';
 import '../common/widgets/date_pil.dart';
 import '../common/widgets/interaction_card.dart';
+import 'package:table_calendar/table_calendar.dart';
 import '../common/widgets/month_year_picker.dart';
 import '../common/widgets/mood_selection.dart';
 import '../features/interactions/models/interaction_model.dart';
@@ -28,6 +29,12 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   DateTime? selectedMonth = DateTime.now();
   DateTime _selectedFilterDate = DateTime.now();
   bool _isDateFilterEnabled = true;
+
+  // Calendar View State
+  CalendarFormat _calendarFormat = CalendarFormat.month;
+  DateTime _focusedDay = DateTime.now();
+  DateTime? _selectedDay;
+  bool _isCalendarView = false;
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
@@ -80,11 +87,27 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
               slivers: [
                 SliverToBoxAdapter(
                     child: _buildInteractionSummaryHeader(context)),
-                if (selectedMonth != null && _isDateFilterEnabled)
+                if (selectedMonth != null &&
+                    _isDateFilterEnabled &&
+                    !_isCalendarView)
                   SliverToBoxAdapter(child: _buildMonthSelectionDate()),
                 BlocConsumer<InteractionListBloc, InteractionListState>(
                   listener: (context, state) {},
                   builder: (context, state) {
+                    if (_isCalendarView) {
+                      List<Interaction> allRelationshipInteractions = [];
+                      if (state is InteractionListLoaded) {
+                        allRelationshipInteractions = state
+                            .scheduledInteractions
+                            .where((e) =>
+                                e.relationshipId == widget.relationship.id)
+                            .toList();
+                      }
+                      return SliverToBoxAdapter(
+                        child: _buildCalendarView(allRelationshipInteractions),
+                      );
+                    }
+
                     List<Interaction> filteredByRelationshipId = [];
                     filteredByRelationshipId = state.scheduledInteractions
                         .where(
@@ -274,6 +297,72 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
     displayBottomModalSheet(context, MoodTrackerScreen());
   }
 
+  Widget _buildCalendarView(List<Interaction> interactions) {
+    return Column(
+      children: [
+        TableCalendar<Interaction>(
+          firstDay: DateTime.utc(2020, 1, 1),
+          lastDay: DateTime.utc(2030, 12, 31),
+          focusedDay: _focusedDay,
+          calendarFormat: _calendarFormat,
+          selectedDayPredicate: (day) => isSameDay(_selectedDay, day),
+          onDaySelected: (selectedDay, focusedDay) {
+            if (!isSameDay(_selectedDay, selectedDay)) {
+              setState(() {
+                _selectedDay = selectedDay;
+                _focusedDay = focusedDay;
+              });
+            }
+          },
+          onFormatChanged: (format) {
+            if (_calendarFormat != format) {
+              setState(() {
+                _calendarFormat = format;
+              });
+            }
+          },
+          onPageChanged: (focusedDay) {
+            _focusedDay = focusedDay;
+          },
+          eventLoader: (day) {
+            return interactions
+                .where((interaction) =>
+                    interaction.selectedDate != null &&
+                    isSameDay(interaction.selectedDate, day))
+                .toList();
+          },
+          calendarStyle: const CalendarStyle(
+            markerDecoration: BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
+            ),
+            todayDecoration: BoxDecoration(
+              color: Colors.grey,
+              shape: BoxShape.circle,
+            ),
+            selectedDecoration: BoxDecoration(
+              color: Colors.black,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8.0),
+        if (_selectedDay != null)
+          SizedBox(
+            height: 300,
+            child: _buildInteractionList(
+              context,
+              interactions
+                  .where((interaction) =>
+                      interaction.selectedDate != null &&
+                      isSameDay(interaction.selectedDate, _selectedDay))
+                  .toList(),
+            ),
+          ),
+      ],
+    );
+  }
+
   Widget buildTab(String title) {
     return Tab(
       child: Container(
@@ -456,41 +545,59 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Interactions',
-              style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              getLast90DaysData(selectedMonth ?? DateTime.now())["label"],
-              style: const TextStyle(fontSize: 14, color: Colors.grey),
-            ),
-          ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Interactions',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                getLast90DaysData(selectedMonth ?? DateTime.now())["label"],
+                style: const TextStyle(fontSize: 14, color: Colors.grey),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
         ),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Switch(
-              value: _isDateFilterEnabled,
-              onChanged: (value) {
+            IconButton(
+              onPressed: () {
                 setState(() {
-                  _isDateFilterEnabled = value;
+                  _isCalendarView = !_isCalendarView;
                 });
               },
-              activeColor: Colors.black,
-            ),
-            if (_isDateFilterEnabled)
-              IconButton(
-                onPressed: () {
-                  _showMonthYearPicker(context);
-                },
-                icon: const Icon(Icons.calendar_today, color: Colors.grey),
+              icon: Icon(
+                _isCalendarView ? Icons.list : Icons.calendar_month,
+                color: Colors.black,
               ),
+            ),
+            if (!_isCalendarView) ...[
+              const SizedBox(width: 10),
+              Switch(
+                value: _isDateFilterEnabled,
+                onChanged: (value) {
+                  setState(() {
+                    _isDateFilterEnabled = value;
+                  });
+                },
+                activeColor: Colors.black,
+              ),
+              if (_isDateFilterEnabled)
+                IconButton(
+                  onPressed: () {
+                    _showMonthYearPicker(context);
+                  },
+                  icon: const Icon(Icons.calendar_today, color: Colors.grey),
+                ),
+            ],
           ],
         ),
       ],

@@ -4,6 +4,7 @@
   "cSpell.words": [
     "appwrite",
     "MMYYY"
-  ]
+  ],
+  "java.compile.nullAnalysis.mode": "disabled"
 }
 

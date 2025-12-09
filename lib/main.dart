@@ -4,14 +4,17 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:relate/common/routes/pages.dart';
+import 'package:relate/services/notification_service.dart';
 
 import 'global.dart';
 
-void main() async { 
+void main() async {
   await Global.init();
-  if(kDebugMode){
-      Bloc.observer = MyBlocObserver();
+  if (kDebugMode) {
+    Bloc.observer = MyBlocObserver();
   }
+  await NotificationService().init();
+  await NotificationService().requestPermissions();
   runApp(const MyApp());
 }
 
@@ -21,7 +24,10 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MultiBlocProvider(
-      providers: [...AppPages.allProviders(context),...AppPages.otherProviders(context)],
+      providers: [
+        ...AppPages.allProviders(context),
+        ...AppPages.otherProviders(context)
+      ],
       child: ScreenUtilInit(
         designSize: const Size(375, 812),
         minTextAdapt: true,
@@ -30,9 +36,9 @@ class MyApp extends StatelessWidget {
           return MaterialApp(
             title: 'Relate',
             theme: ThemeData(
-              colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-              useMaterial3: true,
-              textTheme: GoogleFonts.jostTextTheme()),
+                colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+                useMaterial3: true,
+                textTheme: GoogleFonts.jostTextTheme()),
             debugShowCheckedModeBanner: false,
             onGenerateRoute: AppPages.generateRouteSettings,
           );

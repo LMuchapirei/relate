@@ -198,7 +198,7 @@ class _RelationshipsScreenState extends State<RelationshipsScreen> {
           child: TextField(
             controller: _searchTextController,
             decoration: InputDecoration(
-              hintText: 'Eg: Angeline Doe',
+              hintText: 'Eg: Anna Des',
               prefixIcon: const Icon(Icons.search),
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(10),

@@ -7,6 +7,7 @@ import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
 import 'package:relate/features/interactions/bloc/interaction_events.dart';
 import 'package:relate/features/interactions/models/interaction_model.dart';
 import 'package:relate/global.dart';
+import 'package:relate/services/notification_service.dart';
 
 class InteractionController {
   final BuildContext context;
@@ -62,6 +63,58 @@ class InteractionController {
         data: payload,
       );
       toastInfo(msg: "Submitted the interaction successfully");
+
+      // Schedule notification
+      final notificationTime = DateTime(
+        interaction.selectedDate!.year,
+        interaction.selectedDate!.month,
+        interaction.selectedDate!.day,
+        interaction.selectedTime!.hour,
+        interaction.selectedTime!.minute,
+      );
+
+      // Only schedule if in the future
+      if (notificationTime.isAfter(DateTime.now())) {
+        // Create a unique numeric ID for the notification
+        final notificationId = notificationTime.millisecondsSinceEpoch ~/ 1000;
+
+        final now = DateTime.now();
+        final fifteenMinsBefore =
+            notificationTime.subtract(const Duration(minutes: 15));
+
+        DateTime scheduledTime;
+        String body;
+
+        // Logic:
+        // 1. If we are more than 15 mins away, schedule for 15 mins before.
+        // 2. If we are less than 15 mins away but not yet AT the event, schedule for the event time?
+        //    Or maybe immediately?
+        //    Let's go with: If 15 mins before is passed, schedule for the event time itself.
+        //    If event time is also passed (checked by outer if), we can't do much (handled by outer if).
+
+        if (fifteenMinsBefore.isAfter(now)) {
+          scheduledTime = fifteenMinsBefore;
+          body = "You have an interaction in 15 minutes.";
+        } else {
+          // We are within the 15 minute window. Schedule for the event time.
+          // However, if the event time is extremely close (e.g. 1 min away), we still want to ensure it fires.
+          scheduledTime = notificationTime;
+          body = "It is time for your interaction.";
+
+          // If the event time is literally NOW or passed by milliseconds between the check and execute
+          // local_notifications usually handles 'now' or 'recent past' by firing immediately,
+          // but to be safe, if we are extremely close (e.g. < 5 seconds?), we might want to add a small buffer?
+          // The outer check `notificationTime.isAfter(DateTime.now())` ensures we are at least slightly in the future.
+        }
+
+        await NotificationService().scheduleNotification(
+          notificationId,
+          "Upcoming Interaction: ${interaction.title}",
+          body,
+          scheduledTime,
+        );
+      }
+
       context.read<InteractionListBloc>().add(LoadScheduledInteractions());
     } on Exception catch (e) {
       toastInfo(msg: "Failed to create the interaction ${e.toString()}");
