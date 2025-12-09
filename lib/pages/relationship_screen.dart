@@ -298,6 +298,16 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
   }
 
   Widget _buildCalendarView(List<Interaction> interactions) {
+    // Generate valid repeating instances for the calendar range (e.g., +/- 1 year from focused day)
+    // Or just generating for the currently visible month + padding?
+    // TableCalendar loads lazily if we use eventLoader correctly, but we need to compute instances.
+    // For simplicity, let's expand for a reasonable range around the focused day (e.g. current year +/- 1)
+
+    final expandedInteractions = _expandRepeatingInteractions(
+        interactions,
+        DateTime.utc(_focusedDay.year - 1, 1, 1),
+        DateTime.utc(_focusedDay.year + 1, 12, 31));
+
     return Column(
       children: [
         TableCalendar<Interaction>(
@@ -325,7 +335,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
             _focusedDay = focusedDay;
           },
           eventLoader: (day) {
-            return interactions
+            return expandedInteractions
                 .where((interaction) =>
                     interaction.selectedDate != null &&
                     isSameDay(interaction.selectedDate, day))
@@ -352,7 +362,7 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
             height: 300,
             child: _buildInteractionList(
               context,
-              interactions
+              expandedInteractions
                   .where((interaction) =>
                       interaction.selectedDate != null &&
                       isSameDay(interaction.selectedDate, _selectedDay))
@@ -361,6 +371,107 @@ class _RelationshipDetailsScreenState extends State<RelationshipDetailsScreen> {
           ),
       ],
     );
+  }
+
+  List<Interaction> _expandRepeatingInteractions(
+      List<Interaction> interactions, DateTime start, DateTime end) {
+    List<Interaction> expanded = [];
+
+    for (var interaction in interactions) {
+      if (interaction.selectedDate == null) continue;
+
+      // Always add the original instance if it falls in range
+      if (interaction.selectedDate!
+              .isAfter(start.subtract(const Duration(days: 1))) &&
+          interaction.selectedDate!
+              .isBefore(end.add(const Duration(days: 1)))) {
+        expanded.add(interaction);
+      }
+
+      // Handle repetition
+      if (interaction.frequency.isEmpty || interaction.frequency == 'Never')
+        continue;
+
+      DateTime currentInstance = interaction.selectedDate!;
+
+      // Safety break to prevent infinite loops
+      int count = 0;
+      while (currentInstance.isBefore(end)) {
+        count++;
+        if (count > 500) break; // Arbitrary limit
+
+        // Calculate next instance
+        switch (interaction.frequency) {
+          case 'Daily':
+            currentInstance = currentInstance.add(const Duration(days: 1));
+            break;
+          case 'Weekly':
+            currentInstance = currentInstance.add(const Duration(days: 7));
+            break;
+          case 'Fortnightly':
+            currentInstance = currentInstance.add(const Duration(days: 14));
+            break;
+          case 'Monthly':
+            // Simple month adding logic
+            currentInstance = DateTime(
+                currentInstance.year,
+                currentInstance.month + 1,
+                currentInstance.day,
+                currentInstance.hour,
+                currentInstance.minute);
+            break;
+          case 'Every 3 Months':
+            currentInstance = DateTime(
+                currentInstance.year,
+                currentInstance.month + 3,
+                currentInstance.day,
+                currentInstance.hour,
+                currentInstance.minute);
+            break;
+          case 'Every 6 Months':
+            currentInstance = DateTime(
+                currentInstance.year,
+                currentInstance.month + 6,
+                currentInstance.day,
+                currentInstance.hour,
+                currentInstance.minute);
+            break;
+          case 'Yearly':
+            currentInstance = DateTime(
+                currentInstance.year + 1,
+                currentInstance.month,
+                currentInstance.day,
+                currentInstance.hour,
+                currentInstance.minute);
+            break;
+          default:
+            // Stop if unknown frequency
+            currentInstance = end.add(const Duration(days: 1));
+            break;
+        }
+
+        if (currentInstance.isAfter(end)) break;
+
+        if (currentInstance.isAfter(start)) {
+          // Create a "virtual" interaction for this instance
+          // ID is null or modified to indicate it's a generated instance
+          // This is just for UI display
+          expanded.add(Interaction(
+              id: "${interaction.id}_${currentInstance.millisecondsSinceEpoch}",
+              title: interaction.title,
+              notes: interaction.notes,
+              frequency: interaction.frequency,
+              priority: interaction.priority,
+              selectedRedirectApp: interaction.selectedRedirectApp,
+              relationshipId: interaction.relationshipId,
+              selectedDate: currentInstance,
+              selectedTime: interaction.selectedTime,
+              completed: false, // Future instances are generally not completed
+              createdAt: interaction.createdAt));
+        }
+      }
+    }
+    return expanded;
   }
 
   Widget buildTab(String title) {

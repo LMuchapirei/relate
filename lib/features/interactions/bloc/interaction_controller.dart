@@ -107,12 +107,23 @@ class InteractionController {
           // The outer check `notificationTime.isAfter(DateTime.now())` ensures we are at least slightly in the future.
         }
 
-        await NotificationService().scheduleNotification(
-          notificationId,
-          "Upcoming Interaction: ${interaction.title}",
-          body,
-          scheduledTime,
-        );
+        if (interaction.frequency.isNotEmpty &&
+            interaction.frequency != 'Never') {
+          await NotificationService().scheduleRepeatingNotification(
+            notificationId,
+            "Upcoming Interaction: ${interaction.title}",
+            body,
+            scheduledTime,
+            interaction.frequency,
+          );
+        } else {
+          await NotificationService().scheduleNotification(
+            notificationId,
+            "Upcoming Interaction: ${interaction.title}",
+            body,
+            scheduledTime,
+          );
+        }
       }
 
       context.read<InteractionListBloc>().add(LoadScheduledInteractions());
