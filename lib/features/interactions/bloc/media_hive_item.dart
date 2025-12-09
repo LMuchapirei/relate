@@ -16,6 +16,8 @@ import 'package:rxdart/rxdart.dart';
 // import 'package:relate/common/widgets/video_preview.dart'; find a fix for this
 import 'package:video_player/video_player.dart';
 
+import 'package:relate/common/widgets/pdf_viewer_page.dart';
+
 part 'media_hive_item.g.dart';
 // part 'package:relate/features/interactions/bloc/media_hive_item.g.dart'
 
@@ -55,14 +57,30 @@ class MediaHiveItem extends HiveObject {
   @HiveField(3)
   final LocationHiveType locationType;
 
+  @HiveField(4)
+  String? fileId;
+
+  @HiveField(5)
+  String? bucketId;
+
+  @HiveField(6)
+  String? remoteUrl;
+
+  @HiveField(7)
+  int syncStatus; // 0: Synced, 1: Pending, 2: Failed
+
   MediaHiveItem({
     required this.type,
     required this.content,
     required this.interactionId,
     this.locationType = LocationHiveType.local,
+    this.fileId,
+    this.bucketId,
+    this.remoteUrl,
+    this.syncStatus = 1, // Default to Pending
   });
 
-    String formatDuration(Duration? duration) {
+  String formatDuration(Duration? duration) {
     if (duration == null) return '00:00';
     final minutes = duration.inMinutes.toString().padLeft(2, '0');
     final seconds = (duration.inSeconds % 60).toString().padLeft(2, '0');
@@ -70,121 +88,147 @@ class MediaHiveItem extends HiveObject {
   }
 
   Future<String> getVoiceNoteDuration() async {
-    if (type != MediaHiveType.voice){
+    if (type != MediaHiveType.voice) {
       return "";
     }
     try {
       AudioPlayer audioPlayer = AudioPlayer();
       await audioPlayer.setFilePath(content);
       final duration = audioPlayer.duration;
-      if(duration == null) {
+      if (duration == null) {
         return '00:00';
       }
       final result = formatDuration(duration);
       return result;
-    } catch(e){
+    } catch (e) {
       return "00:00";
     }
   }
 }
 
 extension PreviewMedia on MediaHiveItem {
-  Widget getPreview(BuildContext context,String? url,MediaHiveItem item){
+  Widget getPreview(BuildContext context, String? url, MediaHiveItem item) {
     Widget child = Container();
-    switch(type){
+    switch (type) {
       case MediaHiveType.image:
-      final file = File(item.content);
-       child = Container(
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(8.0),
-                  image: DecorationImage(
-                    image: FileImage(file),
-                    fit: BoxFit.cover,
-                  ),
-                ),
-              );
+        final isRemote = item.content.startsWith('http');
+        child = Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(8.0),
+            image: DecorationImage(
+              image: isRemote
+                  ? NetworkImage(item.content) as ImageProvider
+                  : FileImage(File(item.content)),
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
         break;
       case MediaHiveType.voice:
-         child = Container(
-                height: 100.h,
-                width: 100.w,
-                decoration: BoxDecoration(
-                  color: Colors.grey.shade300,
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    SvgPicture.asset("assets/images/waveform.svg",height: 25.h,
-                      colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
-                    ),
-                    FutureBuilder<String>(
-                        future: getVoiceNoteDuration(),
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState == ConnectionState.waiting) {
-                            return const CircularProgressIndicator();
-                          } else if (snapshot.hasError) {
-                            return const Text('Error loading duration');
-                          } else {
-                            return Text('${snapshot.data}');
-                            
-                          }
-                        },
-                      ),
-                    IconButton(onPressed: (){
-                      
-                    }, icon: const Icon(Icons.play_arrow))
-
-                  ],
-                ),
-              );
+        child = Container(
+          height: 100.h,
+          width: 100.w,
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              SvgPicture.asset(
+                "assets/images/waveform.svg",
+                height: 25.h,
+                colorFilter:
+                    const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+              ),
+              FutureBuilder<String>(
+                future: getVoiceNoteDuration(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator();
+                  } else if (snapshot.hasError) {
+                    return const Text('Error loading duration');
+                  } else {
+                    return Text('${snapshot.data}');
+                  }
+                },
+              ),
+              IconButton(onPressed: () {}, icon: const Icon(Icons.play_arrow))
+            ],
+          ),
+        );
         break;
       case MediaHiveType.video:
         child = VideoPreview(
-                  videoUrl: item.content,
-                  width: 200,
-                  height: 150,
+          videoUrl: item.content,
+          width: 200,
+          height: 150,
         );
         break;
       case MediaHiveType.location:
         final coordinates = content.split(',');
         final latitude = double.parse(coordinates[0]);
         final longitude = double.parse(coordinates[1]);
-        child = LocationPreview(latitude: latitude,longitude: longitude);
+        child = LocationPreview(latitude: latitude, longitude: longitude);
         break;
 
       case MediaHiveType.pdf:
-      break;
+        child = Container(
+          decoration: BoxDecoration(
+            color: Colors.grey.shade300,
+            borderRadius: BorderRadius.circular(8.0),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.picture_as_pdf, size: 40.sp, color: Colors.red),
+              SizedBox(height: 5.h),
+              Padding(
+                padding: EdgeInsets.symmetric(horizontal: 4.w),
+                child: Text(
+                  item.content.split('/').last,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(fontSize: 10.sp),
+                ),
+              ),
+            ],
+          ),
+        );
+        break;
     }
     return child;
   }
 }
 
-
-
 extension CarouselMedia on MediaHiveItem {
-  Widget getCarouselView(BuildContext context,MediaHiveItem item) {
-    switch(type) {
+  Widget getCarouselView(BuildContext context, MediaHiveItem item) {
+    switch (type) {
       case MediaHiveType.image:
-        final file = File(item.content);
+        final isRemote = item.content.startsWith('http');
         return Container(
           decoration: BoxDecoration(
             image: DecorationImage(
-              image: FileImage(file),
+              image: isRemote
+                  ? NetworkImage(item.content) as ImageProvider
+                  : FileImage(File(item.content)),
               fit: BoxFit.contain,
             ),
           ),
         );
-        
+
       case MediaHiveType.voice:
-        return VoiceNoteView(
-          item:item
-        );
+        return VoiceNoteView(item: item);
       case MediaHiveType.video:
-        return  VideoPlayerView(url: item.content, dataSourceType: DataSourceType.file);      
+        return VideoPlayerView(
+            url: item.content, dataSourceType: DataSourceType.file);
       case MediaHiveType.pdf:
-      return Placeholder();
+        final isRemote = item.content.startsWith('http');
+        return PDFViewerWidget(
+          url: isRemote ? item.content : null,
+          filePath: isRemote ? null : item.content,
+        );
       case MediaHiveType.location:
         final coordinates = content.split(',');
         final latitude = double.parse(coordinates[0]);
@@ -196,8 +240,6 @@ extension CarouselMedia on MediaHiveItem {
     }
   }
 }
-
-
 
 MediaHiveType? getMediaTypeFromExtension(String extension) {
   final ext = extension.toLowerCase().replaceAll('.', '');
@@ -226,10 +268,9 @@ MediaHiveType? getMediaTypeFromExtension(String extension) {
       return MediaHiveType.pdf;
 
     default:
-      return null; 
+      return null;
   }
 }
-
 
 class VoiceNoteView extends StatefulWidget {
   final MediaHiveItem item;
@@ -243,23 +284,23 @@ class VoiceNoteView extends StatefulWidget {
 }
 
 class _VoiceNoteViewState extends State<VoiceNoteView> {
-   late AudioPlayer _audioPlayer;
+  late AudioPlayer _audioPlayer;
 
-    Stream<PositionData> get positionDataStream => Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
-    _audioPlayer.positionStream,
-    _audioPlayer.bufferedPositionStream,
-    _audioPlayer.durationStream,
-    (position, bufferedPosition, duration) => PositionData(
-      position: position, 
-      bufferedPosition: bufferedPosition, 
-      duration: duration ?? Duration.zero),
-  );
+  Stream<PositionData> get positionDataStream =>
+      Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
+        _audioPlayer.positionStream,
+        _audioPlayer.bufferedPositionStream,
+        _audioPlayer.durationStream,
+        (position, bufferedPosition, duration) => PositionData(
+            position: position,
+            bufferedPosition: bufferedPosition,
+            duration: duration ?? Duration.zero),
+      );
 
-    @override
+  @override
   void initState() {
     super.initState();
-        _audioPlayer = AudioPlayer()
-                              ..setFilePath(widget.item.content);
+    _audioPlayer = AudioPlayer()..setFilePath(widget.item.content);
   }
 
   @override
@@ -268,7 +309,6 @@ class _VoiceNoteViewState extends State<VoiceNoteView> {
     _audioPlayer.dispose();
   }
 
-  
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -284,26 +324,24 @@ class _VoiceNoteViewState extends State<VoiceNoteView> {
             colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
           ),
           StreamBuilder<PositionData>(
-          stream: positionDataStream,
-          builder: (context, snapshot) {
-            final positionData = snapshot.data;
-            return ProgressBar(
-              barHeight: 8,
-              baseBarColor: Colors.grey[600],
-              bufferedBarColor: Colors.grey[800],
-              progressBarColor: Colors.red,
-              thumbColor: Colors.red,
-              timeLabelTextStyle: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600
-              ),
-              progress: positionData?.position ?? Duration.zero,
-              buffered: positionData?.bufferedPosition ?? Duration.zero,
-              total: positionData?.duration ?? Duration.zero,
-              onSeek: _audioPlayer.seek,
-            );
-          },
-        ),
+            stream: positionDataStream,
+            builder: (context, snapshot) {
+              final positionData = snapshot.data;
+              return ProgressBar(
+                barHeight: 8,
+                baseBarColor: Colors.grey[600],
+                bufferedBarColor: Colors.grey[800],
+                progressBarColor: Colors.red,
+                thumbColor: Colors.red,
+                timeLabelTextStyle: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.w600),
+                progress: positionData?.position ?? Duration.zero,
+                buffered: positionData?.bufferedPosition ?? Duration.zero,
+                total: positionData?.duration ?? Duration.zero,
+                onSeek: _audioPlayer.seek,
+              );
+            },
+          ),
           SizedBox(
             height: 20.h,
           ),

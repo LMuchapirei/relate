@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import '../utils.dart';
-
 // class MonthYearPicker extends StatefulWidget {
 //   @override
 //   _MonthYearPickerState createState() => _MonthYearPickerState();
@@ -50,10 +48,10 @@ import '../utils.dart';
 //                 itemBuilder: (context, index) {
 //                   return ElevatedButton(
 //                     style: ElevatedButton.styleFrom(
-//                       backgroundColor: selectedMonth == months[index] 
-//                           ? Colors.red 
+//                       backgroundColor: selectedMonth == months[index]
+//                           ? Colors.red
 //                           : Colors.grey[300],
-                      
+
 //                     ),
 //                     onPressed: () {
 //                       setState(() {
@@ -88,7 +86,7 @@ import '../utils.dart';
 //               onPressed: () {
 //                 if (selectedMonth != null && selectedYear != null) {
 //                   // Handle the update action here
-//                   Navigator.pop(context,{"month":selectedMonth,"year":selectedYear}); 
+//                   Navigator.pop(context,{"month":selectedMonth,"year":selectedYear});
 //                 } else {
 //                   // Show a message if no month is selected
 //                   ScaffoldMessenger.of(context).showSnackBar(
@@ -114,9 +112,19 @@ class _MonthYearPickerState extends State<MonthYearPicker> {
   int selectedMonth = DateTime.now().month;
   int selectedYear = DateTime.now().year;
 
-  final Map<int,String> months = {
-    0:"Jan",1:"Feb",2:"Mar",3:"Apr",4:"May",5:"Jun",6:
-    "Jul",7:"Aug",8:"Sep",9:"Oct",10:"Nov",11:"Dec"
+  final Map<int, String> months = {
+    0: "Jan",
+    1: "Feb",
+    2: "Mar",
+    3: "Apr",
+    4: "May",
+    5: "Jun",
+    6: "Jul",
+    7: "Aug",
+    8: "Sep",
+    9: "Oct",
+    10: "Nov",
+    11: "Dec"
   };
 
   List<int> years = List.generate(10, (index) => 2024 - index);
@@ -168,50 +176,47 @@ class _MonthYearPickerState extends State<MonthYearPicker> {
             ),
             itemCount: months.length,
             shrinkWrap: true, // Prevents overflow
-            physics: const NeverScrollableScrollPhysics(), 
+            physics: const NeverScrollableScrollPhysics(),
             itemBuilder: (context, index) {
-              /// change a setting to only 
-              final isGreater = isMonthGreaterThanCurrent(index + 1);
               return ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: 
-                    // isGreater ? 
-                    selectedMonth == index
-                      ? Colors.red 
-                       : Colors.grey[300],//: Colors.grey[600],
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10.h)
-                      )
-                ),
+                    backgroundColor:
+                        selectedMonth == index ? Colors.red : Colors.grey[300],
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10.h))),
                 onPressed: () {
-                    if(!isGreater){  
-                      return;
-                    }
                   setState(() {
                     selectedMonth = index;
                   });
                 },
                 child: Text(
                   months[index]!,
-                  style: TextStyle(fontSize: 16.sp,color:selectedMonth == months[index] ? Colors.white : Colors.black ),
+                  style: TextStyle(
+                      fontSize: 16.sp,
+                      color: selectedMonth == months[index]
+                          ? Colors.white
+                          : Colors.black),
                 ),
               );
             },
           ),
-         const  SizedBox(height: 20),
+          const SizedBox(height: 20),
           ElevatedButton(
             onPressed: () {
               if (selectedMonth != null) {
-                Navigator.pop(context,{"month":selectedMonth,"year":selectedYear});
-              } else {
-              }
+                Navigator.pop(
+                    context, {"month": selectedMonth, "year": selectedYear});
+              } else {}
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red,
-              padding: const  EdgeInsets.symmetric(vertical: 12), 
+              padding: const EdgeInsets.symmetric(vertical: 12),
               minimumSize: const Size(double.infinity, 0),
             ),
-            child: const Text("Filter",style: TextStyle(color: Colors.white),),
+            child: const Text(
+              "Filter",
+              style: TextStyle(color: Colors.white),
+            ),
           ),
         ],
       ),

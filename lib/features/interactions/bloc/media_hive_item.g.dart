@@ -21,13 +21,17 @@ class MediaHiveItemAdapter extends TypeAdapter<MediaHiveItem> {
       content: fields[1] as String,
       interactionId: fields[2] as String,
       locationType: fields[3] as LocationHiveType,
+      fileId: fields[4] as String?,
+      bucketId: fields[5] as String?,
+      remoteUrl: fields[6] as String?,
+      syncStatus: fields[7] as int,
     );
   }
 
   @override
   void write(BinaryWriter writer, MediaHiveItem obj) {
     writer
-      ..writeByte(4)
+      ..writeByte(8)
       ..writeByte(0)
       ..write(obj.type)
       ..writeByte(1)
@@ -35,7 +39,15 @@ class MediaHiveItemAdapter extends TypeAdapter<MediaHiveItem> {
       ..writeByte(2)
       ..write(obj.interactionId)
       ..writeByte(3)
-      ..write(obj.locationType);
+      ..write(obj.locationType)
+      ..writeByte(4)
+      ..write(obj.fileId)
+      ..writeByte(5)
+      ..write(obj.bucketId)
+      ..writeByte(6)
+      ..write(obj.remoteUrl)
+      ..writeByte(7)
+      ..write(obj.syncStatus);
   }
 
   @override

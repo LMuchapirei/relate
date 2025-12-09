@@ -1,4 +1,4 @@
-enum MenuOptions { bookmark, edit, share, delete}
+enum MenuOptions { bookmark, edit, share, delete,summaries}
 
 final List<String> imageUrls = [
     'https://via.placeholder.com/150',

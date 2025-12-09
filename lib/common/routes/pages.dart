@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:relate/features/interactions/bloc/interaction_blocs.dart';
 import 'package:relate/features/interactions/bloc/interaction_events.dart';
+import 'package:relate/features/relationship/bloc/birthday_log_bloc.dart';
 import 'package:relate/features/relationship/bloc/relationship_bloc.dart';
+import 'package:relate/features/relationship/bloc/topic_bloc.dart';
 
 import '../../features/application/application_page.dart';
 import '../../features/application/bloc/app_bloc.dart';
@@ -16,6 +18,8 @@ import '../../pages/welcome/bloc/welcome_bloc.dart';
 import '../../pages/welcome/welcome.dart';
 import '../values/constants.dart';
 import 'names.dart';
+import 'package:relate/features/interactions/bloc/interaction_summary_bloc.dart';
+import 'package:relate/features/interactions/bloc/interaction_summary_controller.dart';
 
 
 class AppPages {
@@ -52,8 +56,10 @@ static List<dynamic> otherProviders(BuildContext context){
     BlocProvider(create: (_)=> RelationShipFormBlocs()),
     BlocProvider(create: (_)=> RelationshipListBloc()..add(LoadRelationships())),
     BlocProvider(create: (_)=> InteractionBloc()),
-    BlocProvider(create: (_)=> InteractionListBloc()..add(LoadScheduledInteractions())),
-
+    BlocProvider(create: (_)=> InteractionListBloc()),
+    BlocProvider(create: (_)=> InteractionSummaryBloc(InteractionSummaryController())),
+    BlocProvider(create: (_)=> TopicsBloc()),
+    BlocProvider(create: (_)=> BirthdayLogsBloc()),
   ];
 }
 
@@ -90,4 +96,13 @@ class PageEntity {
   });
 
 
+}
+
+
+class MyBlocObserver extends BlocObserver {
+  @override
+  void onChange(BlocBase bloc, Change change) {
+    super.onChange(bloc, change);
+    print('Bloc: ${bloc.runtimeType}, State Change: $change');
+  }
 }

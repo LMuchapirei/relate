@@ -41,10 +41,8 @@ class SignInController {
           var user = credential.user;
          
           if (user != null) {
-            print("TOKEN====");
             String? idToken = await user.getIdToken();
-            print("ID Token: $idToken");
-            Global.storageService.setString(AppConstants.STORAGE_USER_TOKEN_KEY, "123456789");
+            Global.storageService.setString(AppConstants.STORAGE_USER_TOKEN_KEY, idToken!);
             Navigator.of(context).pushNamedAndRemoveUntil(AppRoutes.APPLICATION, (route) => false);
           } else {
              toastInfo(msg: "Currently you are not a user of this app");

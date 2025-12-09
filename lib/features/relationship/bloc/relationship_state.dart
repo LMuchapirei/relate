@@ -6,54 +6,57 @@ class RelationshipFormStates {
   final String firstName;
   final String lastName;
   final String phoneNumber;
-  final double frequency;
+  final String frequency;
   final double rating;
   final String relationshipType;
+  final List<String> tags; // <-- Added
   final String nickName;
   final XFile? profilePicture;
 
-  const RelationshipFormStates({
-    this.firstName = "",
-    this.lastName = "",
-    this.frequency = 0.0,
-    this.phoneNumber = "",
-    this.rating = 0.0,
-    this.nickName= "",
-    this.relationshipType = "",
-    this.profilePicture
-  });
+  const RelationshipFormStates(
+      {this.firstName = "",
+      this.lastName = "",
+      this.frequency = "Weekly",
+      this.phoneNumber = "",
+      this.rating = 3.0,
+      this.nickName = "",
+      this.relationshipType = "",
+      this.tags = const [], // <-- Added
+      this.profilePicture});
 
-  RelationshipFormStates copyWith({
-    String? firstName,
-    String? lastName,
-    String? phoneNumber,
-    double? frequency,
-    double? rating,
-    String? nickName,
-    String? relationshipType,
-    XFile? profilePicture
-  }) {
+  RelationshipFormStates copyWith(
+      {String? firstName,
+      String? lastName,
+      String? phoneNumber,
+      String? frequency,
+      double? rating,
+      String? nickName,
+      String? relationshipType,
+      List<String>? tags, // <-- Added
+      XFile? profilePicture}) {
     return RelationshipFormStates(
-     firstName: firstName ?? this.firstName,
-     lastName: lastName ?? this.lastName,
-     phoneNumber: phoneNumber ?? this.phoneNumber,
-     frequency: frequency ?? this.frequency,
-     nickName: nickName ?? this.nickName,
-     rating: rating ?? this.rating,
-     profilePicture: profilePicture ?? this.profilePicture,
-     relationshipType: relationshipType ?? this.relationshipType
-     );
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
+      frequency: frequency ?? this.frequency,
+      nickName: nickName ?? this.nickName,
+      rating: rating ?? this.rating,
+      profilePicture: profilePicture ?? this.profilePicture,
+      relationshipType: relationshipType ?? this.relationshipType,
+      tags: tags ?? this.tags, // <-- Added
+    );
   }
 
   @override
   String toString() {
     return {
-      "firstName":firstName,
-      "lastName":lastName,
+      "firstName": firstName,
+      "lastName": lastName,
       "phoneNumber": phoneNumber,
-      "frequency":frequency,
-      "rating":rating,
-      "relationshipType":relationshipType
+      "frequency": frequency,
+      "rating": rating,
+      "relationshipType": relationshipType,
+      "tags": tags,
     }.toString();
   }
 }

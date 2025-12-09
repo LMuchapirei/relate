@@ -12,8 +12,14 @@ import 'package:appwrite/appwrite.dart';
 class Global {
   static late StorageService storageService;
   static late Client client;
+
   static Future init() async {
     WidgetsFlutterBinding.ensureInitialized();
+    client = Client();
+      client
+        .setEndpoint('http://localhost:8094/v1')
+        .setProject('6837ff4a0030551111a8')
+        .setSelfSigned(status: true); 
     await Firebase.initializeApp();
     storageService = await StorageService().init();
     final appDocumentDir = await getApplicationDocumentsDirectory();

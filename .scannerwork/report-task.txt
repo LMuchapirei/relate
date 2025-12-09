@@ -1,0 +1,6 @@
+projectKey=Relate
+serverUrl=http://localhost:9000
+serverVersion=25.5.0.107428
+dashboardUrl=http://localhost:9000/dashboard?id=Relate
+ceTaskId=26a6c30b-7a24-405b-8097-ccbe6e65cc2e
+ceTaskUrl=http://localhost:9000/api/ce/task?id=26a6c30b-7a24-405b-8097-ccbe6e65cc2e

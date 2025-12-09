@@ -13,7 +13,7 @@ import 'bloc/welcome_event.dart';
 import 'bloc/welcome_state.dart';
 
 class Welcome extends StatefulWidget {
-  const Welcome({Key? key}) : super(key: key);
+  const Welcome({super.key});
 
   @override
   State<Welcome> createState() => _WelcomeState();
