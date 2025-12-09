@@ -1,21 +1,23 @@
 import 'dart:io';
 
-import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/svg.dart';
 import 'package:hive/hive.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:relate/common/values/video_metadata.dart';
+import 'package:just_audio/just_audio.dart' as ja;
+
 import 'package:relate/common/widgets/map_full_view.dart';
 import 'package:relate/common/widgets/map_preview.dart';
-import 'package:relate/common/widgets/video_controls.dart';
+
 import 'package:relate/common/widgets/video_player.dart';
 import 'package:relate/common/widgets/video_preview.dart';
-import 'package:rxdart/rxdart.dart';
+
 // import 'package:relate/common/widgets/video_preview.dart'; find a fix for this
 import 'package:video_player/video_player.dart';
 
+import 'package:audio_waveforms/audio_waveforms.dart';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:relate/common/widgets/pdf_viewer_page.dart';
 
 part 'media_hive_item.g.dart';
@@ -69,6 +71,9 @@ class MediaHiveItem extends HiveObject {
   @HiveField(7)
   int syncStatus; // 0: Synced, 1: Pending, 2: Failed
 
+  @HiveField(8)
+  String? transcript;
+
   MediaHiveItem({
     required this.type,
     required this.content,
@@ -78,6 +83,7 @@ class MediaHiveItem extends HiveObject {
     this.bucketId,
     this.remoteUrl,
     this.syncStatus = 1, // Default to Pending
+    this.transcript,
   });
 
   String formatDuration(Duration? duration) {
@@ -92,8 +98,18 @@ class MediaHiveItem extends HiveObject {
       return "";
     }
     try {
-      AudioPlayer audioPlayer = AudioPlayer();
-      await audioPlayer.setFilePath(content);
+      debugPrint('Getting duration for: $content');
+      ja.AudioPlayer audioPlayer = ja.AudioPlayer();
+      if (content.startsWith('http')) {
+        await audioPlayer.setUrl(content);
+      } else {
+        final file = File(content);
+        if (!await file.exists()) {
+          debugPrint('File does not exist: $content');
+          return '00:00';
+        }
+        await audioPlayer.setFilePath(content);
+      }
       final duration = audioPlayer.duration;
       if (duration == null) {
         return '00:00';
@@ -101,6 +117,7 @@ class MediaHiveItem extends HiveObject {
       final result = formatDuration(duration);
       return result;
     } catch (e) {
+      debugPrint('Error getting duration: $e');
       return "00:00";
     }
   }
@@ -284,68 +301,178 @@ class VoiceNoteView extends StatefulWidget {
 }
 
 class _VoiceNoteViewState extends State<VoiceNoteView> {
-  late AudioPlayer _audioPlayer;
-
-  Stream<PositionData> get positionDataStream =>
-      Rx.combineLatest3<Duration, Duration, Duration?, PositionData>(
-        _audioPlayer.positionStream,
-        _audioPlayer.bufferedPositionStream,
-        _audioPlayer.durationStream,
-        (position, bufferedPosition, duration) => PositionData(
-            position: position,
-            bufferedPosition: bufferedPosition,
-            duration: duration ?? Duration.zero),
-      );
+  late PlayerController _playerController;
+  bool _isPlaying = false;
+  String? _duration;
 
   @override
   void initState() {
     super.initState();
-    _audioPlayer = AudioPlayer()..setFilePath(widget.item.content);
+    _playerController = PlayerController();
+    _preparePlayer();
+  }
+
+  Future<void> _preparePlayer() async {
+    try {
+      String path = widget.item.content;
+      if (path.startsWith('http')) {
+        final file = await _downloadFile(path);
+        if (file != null) {
+          path = file.path;
+        } else {
+          debugPrint('Failed to download file');
+          return;
+        }
+      }
+
+      await _playerController.preparePlayer(
+        path: path,
+        shouldExtractWaveform: true,
+        noOfSamples: 100,
+        volume: 1.0,
+      );
+
+      final duration = await _playerController.getDuration(DurationType.max);
+      setState(() {
+        _duration =
+            widget.item.formatDuration(Duration(milliseconds: duration));
+      });
+
+      _playerController.onPlayerStateChanged.listen((state) {
+        if (mounted) {
+          setState(() {
+            _isPlaying = state == PlayerState.playing;
+          });
+        }
+      });
+    } catch (e) {
+      debugPrint('Error preparing player: $e');
+    }
+  }
+
+  Future<File?> _downloadFile(String url) async {
+    try {
+      final request = await HttpClient().getUrl(Uri.parse(url));
+      final response = await request.close();
+      final bytes = await consolidateHttpClientResponseBytes(response);
+      final dir = await getApplicationDocumentsDirectory();
+      final file =
+          File('${dir.path}/${DateTime.now().millisecondsSinceEpoch}.m4a');
+      await file.writeAsBytes(bytes);
+      return file;
+    } catch (e) {
+      debugPrint('Error downloading file: $e');
+      return null;
+    }
   }
 
   @override
   void dispose() {
+    _playerController.dispose();
     super.dispose();
-    _audioPlayer.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
+      padding: EdgeInsets.all(12.h),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8.0),
+        color: const Color(0xFFE6E6FA), // Light purple
+        borderRadius: BorderRadius.circular(16.r),
       ),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          SvgPicture.asset(
-            "assets/images/waveform.svg",
-            height: 50.h,
-            colorFilter: const ColorFilter.mode(Colors.black, BlendMode.srcIn),
+          Row(
+            children: [
+              GestureDetector(
+                onTap: () async {
+                  if (_isPlaying) {
+                    await _playerController.pausePlayer();
+                  } else {
+                    await _playerController.startPlayer();
+                  }
+                },
+                child: Container(
+                  width: 40.h,
+                  height: 40.h,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF6A5ACD), // Dark purple
+                  ),
+                  child: Icon(
+                    _isPlaying ? Icons.pause : Icons.play_arrow,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+              SizedBox(width: 12.w),
+              Text(
+                _duration ?? '00:00',
+                style: TextStyle(
+                  fontSize: 14.sp,
+                  color: Colors.grey[700],
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+              const Spacer(),
+              Icon(
+                Icons.chat_bubble_outline,
+                color: Colors.grey[600],
+                size: 20.h,
+              ),
+            ],
           ),
-          StreamBuilder<PositionData>(
-            stream: positionDataStream,
-            builder: (context, snapshot) {
-              final positionData = snapshot.data;
-              return ProgressBar(
-                barHeight: 8,
-                baseBarColor: Colors.grey[600],
-                bufferedBarColor: Colors.grey[800],
-                progressBarColor: Colors.red,
-                thumbColor: Colors.red,
-                timeLabelTextStyle: const TextStyle(
-                    color: Colors.white, fontWeight: FontWeight.w600),
-                progress: positionData?.position ?? Duration.zero,
-                buffered: positionData?.bufferedPosition ?? Duration.zero,
-                total: positionData?.duration ?? Duration.zero,
-                onSeek: _audioPlayer.seek,
-              );
-            },
+          SizedBox(height: 12.h),
+          AudioFileWaveforms(
+            size: Size(double.infinity, 60.h),
+            playerController: _playerController,
+            enableSeekGesture: true,
+            waveformType: WaveformType.fitWidth,
+            playerWaveStyle: const PlayerWaveStyle(
+              fixedWaveColor: Color(0xFFB0C4DE),
+              liveWaveColor: Color(0xFF6A5ACD),
+              spacing: 6,
+            ),
           ),
-          SizedBox(
-            height: 20.h,
-          ),
-          Controls(audioPlayer: _audioPlayer)
+          if (widget.item.transcript != null &&
+              widget.item.transcript!.isNotEmpty) ...[
+            SizedBox(height: 12.h),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(8.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                widget.item.transcript!,
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey[800],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ] else ...[
+            SizedBox(height: 12.h),
+            Container(
+              width: double.infinity,
+              padding: EdgeInsets.all(8.h),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.3),
+                borderRadius: BorderRadius.circular(8.r),
+              ),
+              child: Text(
+                "Transcript not available",
+                style: TextStyle(
+                  fontSize: 12.sp,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          ]
         ],
       ),
     );

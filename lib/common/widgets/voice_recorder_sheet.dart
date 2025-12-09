@@ -1,9 +1,9 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:audio_waveforms/audio_waveforms.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 
 class VoiceRecorderSheet extends StatefulWidget {
@@ -53,7 +53,7 @@ class _VoiceRecorderSheetState extends State<VoiceRecorderSheet> {
       });
 
       if (path != null && mounted) {
-        Navigator.of(context).pop({'fileObject': File(path)});
+        Navigator.of(context).pop({'fileObject': XFile(path)});
       }
     } catch (e) {
       debugPrint('Error stopping recording: $e');

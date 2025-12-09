@@ -24,7 +24,7 @@ class MediaHiveItemAdapter extends TypeAdapter<MediaHiveItem> {
       fileId: fields[4] as String?,
       bucketId: fields[5] as String?,
       remoteUrl: fields[6] as String?,
-      syncStatus: fields[7] as int,
+      transcript: fields[8] as String?,
     );
   }
 
@@ -46,8 +46,8 @@ class MediaHiveItemAdapter extends TypeAdapter<MediaHiveItem> {
       ..write(obj.bucketId)
       ..writeByte(6)
       ..write(obj.remoteUrl)
-      ..writeByte(7)
-      ..write(obj.syncStatus);
+      ..writeByte(8)
+      ..write(obj.transcript);
   }
 
   @override
